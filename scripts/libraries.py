@@ -77,4 +77,3 @@ def translate_cds(seq):
     
 def read_profiles(path):
     return pd.read_csv(path, sep="\t", skiprows=1, header=None, names="site,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y".split(","))
-
