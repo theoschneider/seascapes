@@ -1,0 +1,91 @@
+import os
+import socket
+import pandas as pd
+import random
+from ete3 import Tree
+from Bio import SeqIO
+
+configfile: 'config.yaml'
+
+FOLDER = os.path.abspath('.')
+FASTA_FOLDER = f"{FOLDER}/data/omm_NT_fasta.v10c_116"
+TREE_FOLDER = f"{FOLDER}/data/omm_RooTree.v10b_116"
+XML_FOLDER = f"{FOLDER}/data/omm_markers"
+
+mutsel_path = "mutselomega"  # In case you want to specify the path to Bayescode bin folder
+readmutsel_path = "readmutselomega"  # In case you want to specify the path to Bayescode bin folder
+CDS_list = list(sorted([i.replace(".fasta","") for i in os.listdir(FASTA_FOLDER)]))[
+           config['CDS_START_LIST']:config['CDS_END_LIST']]
+print(f"{len(CDS_list)} CDS found in {FASTA_FOLDER}.")
+MODELS = {"sitemutsel": "--omegashift 0.0 --ncat 30"}
+POINTS = config['POINTS']
+BURN_IN = config['BURN_IN']
+
+
+localrules: all,filter,
+
+rule all:
+    input:
+        f"{FOLDER}/results/GeneTable.csv.gz"
+
+rule filter:
+    input:
+        fasta=f"{FASTA_FOLDER}/{{CDS}}.fasta",
+        tree=f"{TREE_FOLDER}/{{CDS}}.rootree"
+    output:
+        ali=f"{EXP_FOLDER}/{{CDS}}/placnr.ali",
+        tree=f"{EXP_FOLDER}/{{CDS}}/placnr.rootree"
+    run:
+        assert (os.path.isfile(input.tree))
+        tree = Tree(input.tree)
+        species_to_discard = [i.split("_")[0].lower() for i in list(pd.read_csv("taxlist.tsv",sep="\t")["Name"])]
+        orthomam_species = tree.get_leaf_names()
+        species_to_keep = [s for s in orthomam_species if s.split("_")[0].lower() not in species_to_discard]
+        tree.prune(species_to_keep,preserve_branch_length=True)
+        assert (len(tree.get_leaf_names()) == len(species_to_keep))
+        tree.write(outfile=output.tree,format=1)
+
+        fasta_seqs = SeqIO.parse(open(input.fasta,'r'),'fasta')
+        ids_seqs = [(fasta.id, str(fasta.seq).replace("!","-").replace("?","-")) for fasta in fasta_seqs if
+                    fasta.id.split("_")[0].lower() not in species_to_discard]
+
+        assert len(ids_seqs) == len(tree.get_leaf_names())
+        ali_file = open(output.ali,'w')
+        ali_file.write(str(len(ids_seqs)) + " " + str(len(ids_seqs[0][1])) + "\n")
+        ali_file.write("\n".join([" ".join(id_seq) for id_seq in ids_seqs]))
+        ali_file.close()
+
+rule run_bayescode:
+    input:
+        ali=f"{EXP_FOLDER}/{{CDS}}/placnr.ali",
+        tree=f"{EXP_FOLDER}/{{CDS}}/placnr.rootree",
+    output: touch(f"{EXP_FOLDER}/{{CDS}}/{{model}}_{{chain}}.run")
+    params:
+        time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        unzip=lambda wildcards, output: "gunzip {0}.chain.gz &&".format(output) if config['RESTART'] else "",
+        cmd=lambda wildcards, input: "-a {0} -t {1} -u {2} {3}".format(input.ali,input.tree,POINTS,
+            MODELS[wildcards.model]) if not config['RESTART'] else ""
+    shell: "{params.unzip} {mutsel_path} {params.cmd} {output} && gzip -f {output}.chain"
+
+rule read_bayescode:
+    input:
+        run=f"{EXP_FOLDER}/{{CDS}}/{{model}}_{{chain}}.run",
+    params:
+        time="0-10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        nuc=lambda wildcards, input: f"{readmutsel_path} --every 1 --until {POINTS} --burnin {BURN_IN} --nuc {input.run}",
+        ss=lambda wildcards, input: f"{readmutsel_path} --every 1 --until {POINTS} --burnin {BURN_IN} --ss {input.run}",
+        read=lambda wildcards, input: " && ".join([
+            f'{readmutsel_path} --every 1 --until {POINTS} --burnin {BURN_IN} {"--omega_0" if wildcards.model == "sitemutsel" else ""} -c {ci} {input.run}'
+            for ci in [0.025, 0.0025]])
+    output: touch(f"{EXP_FOLDER}/{{CDS}}/{{model}}_{{chain}}.read")
+    shell: "gunzip {input.run}.chain.gz && {params.nuc} && {params.ss} && {params.read} && gzip -f {input.run}.chain"
+
+
+rule gene_table:
+    input:
+        bayescode=expand(rules.read_bayescode.output,CDS=CDS_list,model=MODELS,chain=config['CHAINS']),
+        script=f"{ROOT}/scripts/table_gene_omega.py"
+    output:
+        tsv=f"{FOLDER}/GeneTable.tsv"
+    shell:
+        "python3 {input.script} --div_folder {EXP_FOLDER} --xml {XML_FOLDER} --species Homo_sapiens Chlorocebus_sabaeus Bos_taurus Equus_caballus Ovis_aries Capra_hircus Canis_familiaris --output {output.tsv}"
