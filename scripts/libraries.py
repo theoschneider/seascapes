@@ -54,8 +54,6 @@ def write_ali(dico_fasta, output):
     assert len(set_seq_len) == 1, "All sequences must have the same length"
     seq_len = set_seq_len.pop()
 
-    # Open the output file
-    outfile = open(output, 'w')
     # Write the header (the number of sequences and the sequence length)
     outfile.write(f"{len(dico_fasta)} {seq_len}\n")
     # Write the names and sequences
