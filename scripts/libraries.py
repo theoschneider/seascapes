@@ -55,7 +55,7 @@ def write_ali(dico_fasta, output):
     seq_len = set_seq_len.pop()
 
     # Open the output file
-    outfile = open(args.output, 'w')
+    outfile = open(output, 'w')
     # Write the header (the number of sequences and the sequence length)
     outfile.write(f"{len(dico_fasta)} {seq_len}\n")
     # Write the names and sequences
