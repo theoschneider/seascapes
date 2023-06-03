@@ -13,17 +13,23 @@ def main(file1: str, file2: str, output_dir: str):
 
     distance = (kl1 + kl2)/2
 
-    distance.to_csv(output_dir+"/distance", sep="\t")
-    with open(output_dir+"/distance", 'w') as outfile:
-        outfile.write(f"{distance}\n")
+    distance.to_csv(output_dir+"/distance.tsv", sep="\t", header=False)
 
-    fig = distance.plot()
-    fig.savefig(output_dir+"distance.pdf")
+    plt.figure(figsize=(12, 7))
+    plt.plot(distance)
+    plt.xlabel("Position")
+    plt.ylabel("Distance")
+    plt.title("Distance between two site profiles")
+    plt.tight_layout()
+    plt.savefig(output_dir+"/distance.pdf")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
     parser.add_argument('--file1', required=True, type=str, dest="file1", help="First .siteprofiles file path")
     parser.add_argument('--file2', required=True, type=str, dest="file2", help="Second .siteprofiles file path")
     parser.add_argument('--output', required=True, type=str, dest="output_dir", help="Output file path")
+
     args = parser.parse_args()
-    main(args)
+    main(args.file1, args.file2, args.output_dir)
