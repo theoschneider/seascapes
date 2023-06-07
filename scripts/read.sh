@@ -2,9 +2,11 @@
 # Set directory
 folder=~/THÉO/seascapes
 
+# Variables that can be changed
 until=2000
 delta_t=100
 
+# From 0 to until with a step of delta_t
 for burnin in seq 0 ${until} ${delta_t}
 do
   ${folder}/utils/bayescode/bin/readmutselomega --every 1 \
