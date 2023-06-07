@@ -3,24 +3,22 @@
 folder=~/THÉO/seascapes
 
 # Variables that can be changed
-until=2000
-delta_t=100
+loop_until=2000 # This is the --until parameter in readmutselomega
+delta=100
 
-# From 0 to until with a step of delta_t
-for burnin in seq 0 ${until} ${delta_t}
+# From 0 to "loop_until" with a step of "delta"
+for ((burnin=0; burnin<=loop_until-delta; burnin+=delta))
 do
-  ${folder}/utils/bayescode/bin/readmutselomega --every 1 \
-                                                --burnin ${burnin} \
-                                                --until ${burnin}+${delta_t} \
-                                                --ss ${folder}/processed/mutsel_TSPAN6_1
+  mkdir -p "${folder}/processed/TSPAN6_${delta}"
 
   ${folder}/utils/bayescode/bin/readmutselomega --every 1 \
-                                                --burnin ${burnin} \
-                                                --until ${burnin}+${delta_t} \
-                                                --ss ${folder}/processed/mutsel_TSPAN6_2
+                                                --burnin $burnin \
+                                                --until $((burnin+delta)) \
+                                                --ss "${folder}/processed/mutsel_TSPAN6_1"
 
-  # Compute the distance between the 2 runs
-  python3 ${folder}/scripts/distance.py --file1 ${folder}/processed/mutsel_TSPAN6_1.siteprofiles \
-                                        --file2 ${folder}/processed/mutsel_TSPAN6_2.siteprofiles \
-                                        --output ${folder}/results/
+  mv "${folder}/processed/mutsel_TSPAN6_1.siteprofiles" "${folder}/processed/TSPAN6_${delta}/${burnin}_$((burnin+delta)).siteprofiles"
 done
+
+# Compute the distance between all the .siteprofiles in the folder
+python3 "${folder}/scripts/autocor.py" --path "${folder}/processed/TSPAN6_${delta}/" \
+                                       --outdir "${folder}/results/"
