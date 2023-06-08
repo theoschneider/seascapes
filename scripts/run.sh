@@ -11,7 +11,7 @@ for i in 1 2
 do
   # Run mutsel
   ${folder}/utils/bayescode/bin/mutselomega --ncat 30 \
-  -a ${folder}/processed/TSPAN6_NT.phy \
-  -t ${folder}/data/omm_RooTree.v10b_116/ENSG00000000003_TSPAN6_NT.rootree \
-  --until 2000 ${folder}/processed/mutsel_TSPAN6_${i}
+                                            -a ${folder}/processed/TSPAN6_NT.phy \
+                                            -t ${folder}/data/omm_RooTree.v10b_116/ENSG00000000003_TSPAN6_NT.rootree \
+                                            --until 2000 ${folder}/processed/mutsel_TSPAN6_${i}
 done
