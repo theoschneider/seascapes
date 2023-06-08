@@ -2,19 +2,23 @@ import argparse
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import ticker
 import os
 
 
 def main(path: str, outdir: str):
 
     filenames = os.listdir(path)
+    filenames.sort(key=lambda x: int(x.split("_")[0]))
+    print(filenames)
+    dataframes = [pd.read_csv(path+filename, sep="\t", header=0) for filename in filenames]
     matrix = np.zeros((len(filenames), len(filenames)))
 
     for i in range(len(filenames)):
-        for j in range(i+1, len(filenames)):
+        df1 = dataframes[i]
 
-            df1 = pd.read_csv(path+filenames[i], sep="\t", header=0)
-            df2 = pd.read_csv(path+filenames[j], sep="\t", header=0)
+        for j in range(i+1, len(filenames)):
+            df2 = dataframes[j]
 
             kl1 = np.sum(df1 * np.log(df1 / df2), axis=1)
             kl2 = np.sum(df2 * np.log(df2 / df1), axis=1)
@@ -27,11 +31,13 @@ def main(path: str, outdir: str):
     pd.DataFrame(matrix).to_csv(outdir + "all_distances.tsv", sep="\t", header=False, index=False)
 
     plt.figure(figsize=(10, 8))
-    plt.imshow(matrix, cmap='hot', interpolation='nearest')
+    plt.imshow(matrix, cmap='hot', interpolation='nearest') # origin='lower'
     plt.colorbar()
-    plt.xlabel("Second window (delta t)")
-    plt.ylabel("First window (delta t)")
-    plt.title("Autocorrelation between all pairs of site profiles")
+    plt.xticks(np.arange(0, len(filenames)), np.arange(1, len(filenames)+1))
+    plt.yticks(np.arange(0, len(filenames)), np.arange(1, len(filenames)+1))
+    plt.xlabel("Second window (of size delta t)")
+    plt.ylabel("First window (of size delta t)")
+    plt.title("Autocorrelation plot, showing Jensen–Shannon divergence between all pairs of windows")
     plt.savefig(outdir + "heatmap.pdf")
 
 

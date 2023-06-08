@@ -4,7 +4,7 @@ folder=~/THÉO/seascapes
 
 # Variables that can be changed
 loop_until=2000 # This is the --until parameter in readmutselomega
-delta=100
+delta=200
 
 # From 0 to "loop_until" with a step of "delta"
 for ((burnin=0; burnin<=loop_until-delta; burnin+=delta))
