@@ -14,21 +14,29 @@ def main(tree_path: str, fasta_path: str, subset: list, outdir: str):
 
     # Split the fasta files in 2 (according to subset argument)
     with open(fasta_path, 'r') as f:
-        fasta = f.read()
+        fasta = f.readlines()
 
     fasta1 = ""
     fasta2 = ""
-    for line in fasta.split("\n"):
-        if line.startswith(">"):
-            if line[1:] in tree1.get_leaf_names():
-                fasta1 += line + "\n"
-            else:
-                fasta2 += line + "\n"
+
+
+    for i in range(0, len(fasta), 2):
+
+        sp = fasta[i][1:].strip()
+        seq = fasta[i+1].strip()
+
+        # Check that there are no empty sequences
+        assert seq != len(seq) * "-", "One or more sequences are empty!"
+
+        # Look for species name in the tree file and append the corresponding fasta sequence to the right file
+        if sp in tree1.get_leaf_names():
+            fasta1 += ">" + sp + "\n" + seq + "\n"
         else:
-            if line[1:] in tree1.get_leaf_names():
-                fasta1 += line + "\n"
-            else:
-                fasta2 += line + "\n"
+            fasta2 += ">" + sp + "\n" + seq + "\n"
+
+    # Check that there are at least 20 species in each subset
+    assert len(tree1.get_leaf_names()) >= 20 and len(tree2.get_leaf_names()) >= 20, \
+        "Both subsets must contain at least 20 species!"
 
     # Write the 2 subtrees and 2 fasta files
     with open(outdir + "subset1.rootree", 'w') as f:
