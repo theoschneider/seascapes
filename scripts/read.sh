@@ -2,30 +2,21 @@
 # Set directory
 folder=~/THÉO/seascapes
 
-# Variables that can be changed
-loop_until=2000 # This is the --until parameter in readmutselomega
-delta=500
-
-# From 0 to "loop_until" with a step of "delta"
-for ((burnin=0; burnin<=loop_until-delta; burnin+=delta))
+# Read MutSel for all 4 files
+for i in 1_1 1_2 2_1 2_2
 do
 
-  mkdir -p "${folder}/processed/TSPAN6_${delta}"
-
-  for i in 1 2
-  do
-
-    ${folder}/utils/bayescode/bin/readmutselomega --every 1 \
-                                                  --burnin $burnin \
-                                                  --until $((burnin+delta)) \
-                                                  --ss "${folder}/processed/mutsel_TSPAN6_${i}"
-
-    mv "${folder}/processed/mutsel_TSPAN6_${i}.siteprofiles" "${folder}/processed/TSPAN6_${delta}/chain${i}_${burnin}_$((burnin+delta)).siteprofiles"
-
-  done
+  ${folder}/utils/bayescode/bin/readmutselomega --every 1 \
+                                                --burnin 1000 \
+                                                --until 2000 \
+                                                --ss "${folder}/processed/rodents_subset/mutsel_subset${i}"
 
 done
 
+
 # Compute the distance between all the .siteprofiles in the folder
-python3 "${folder}/scripts/autocor.py" --path "${folder}/processed/TSPAN6_${delta}/" \
-                                       --outdir "${folder}/results/"
+python3 "${folder}/scripts/distance.py" --file1 "${folder}/processed/rodents_subset/mutsel_subset1_1.siteprofiles" \
+                                        --file2 "${folder}/processed/rodents_subset/mutsel_subset1_2.siteprofiles" \
+                                        --file3 "${folder}/processed/rodents_subset/mutsel_subset2_1.siteprofiles" \
+                                        --file4 "${folder}/processed/rodents_subset/mutsel_subset2_2.siteprofiles" \
+                                        --outdir "${folder}/results/rodents_subset/"
