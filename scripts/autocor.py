@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from libraries import js
 
 
 def main(path: str, outdir: str):
@@ -10,10 +11,13 @@ def main(path: str, outdir: str):
     filenames = os.listdir(path)
     filenames.sort(key=lambda x: int(x.split("_")[1]))
     print(filenames)
-    dataframes1 = [pd.read_csv(path+filename, sep="\t", header=0) for filename in filenames
+    dataframes1 = [pd.read_csv(path+filename, sep="\t", header=0, index_col=0) for filename in filenames
                    if filename.split("_")[0] == "chain1"]
-    dataframes2 = [pd.read_csv(path+filename, sep="\t", header=0) for filename in filenames
+    dataframes2 = [pd.read_csv(path+filename, sep="\t", header=0, index_col=0) for filename in filenames
                    if filename.split("_")[0] == "chain2"]
+
+    assert len(dataframes1) == len(dataframes2), "Number of windows in chain1 and chain2 are not equal"
+
     matrix = np.zeros((len(dataframes1), len(dataframes2)))
 
     for i in range(len(dataframes1)):
@@ -22,10 +26,7 @@ def main(path: str, outdir: str):
         for j in range(len(dataframes2)):
             df2 = dataframes2[j]
 
-            kl1 = np.sum(df1 * np.log(df1 / df2), axis=1)
-            kl2 = np.sum(df2 * np.log(df2 / df1), axis=1)
-
-            distance = (kl1 + kl2)/2
+            distance = js(df1, df2)
 
             matrix[i, j] = np.mean(distance)
 
@@ -40,7 +41,7 @@ def main(path: str, outdir: str):
     plt.xlabel("Window from chain 2 (of size delta t)")
     plt.ylabel("Window from chain 1 (of size delta t)")
     plt.title("Autocorrelation plot, showing Jensen–Shannon divergence between all pairs of windows")
-    plt.savefig(outdir + "heatmap.pdf")
+    plt.savefig(f"{outdir}/heatmap_bothchains_{int(2000 / len(dataframes1))}.pdf")
 
 
 if __name__ == '__main__':

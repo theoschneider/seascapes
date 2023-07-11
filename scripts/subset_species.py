@@ -1,8 +1,13 @@
 import argparse
 from ete3 import Tree
+import pandas as pd
 
 
-def main(tree_path: str, fasta_path: str, subset: list, outdir: str):
+def main(tree_path: str, fasta_path: str, subset_path: str, outdir: str):
+
+    # Read the subset file
+    subset = pd.read_csv(subset_path, header=None, index_col=None)
+    subset = subset[0].tolist()
 
     # Read the tree
     tree1 = Tree(tree_path, format=1)
@@ -61,8 +66,8 @@ if __name__ == '__main__':
                         help="Path to the fasta file")
     parser.add_argument('--outdir', required=True, type=str, dest="outdir",
                         help="Path to the output directory")
-    parser.add_argument('--subset', required=True, nargs='*', dest="subset",
-                        help="List of species to keep")
+    parser.add_argument('--subset', required=True, nargs='*', dest="subset_path",
+                        help="csv file containing the species to keep")
 
     args = parser.parse_args()
     main(args.tree_path, args.fasta_path, args.subset, args.outdir)
