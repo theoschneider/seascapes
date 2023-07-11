@@ -6,7 +6,7 @@ def main(tree_path: str, fasta_path: str, subset: list, outdir: str):
 
     # Read the tree
     tree1 = Tree(tree_path, format=1)
-    tree2 = Tree(tree_path, format=1)
+    tree2 = tree1.copy()
 
     # Split the tree in 2 subtrees (according to subset argument)
     tree1.prune(subset, preserve_branch_length=True)

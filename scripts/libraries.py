@@ -82,16 +82,19 @@ def read_profiles(path):
     return pd.read_csv(path, sep="\t", skiprows=1, header=None, names="site,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y".split(","))
 
 
-def js(path1: str, path2: str):
-    # Compute Jensen-Shannon divergence between two profiles
-    df1 = pd.read_csv(path1, sep="\t", header=0)
-    df2 = pd.read_csv(path2, sep="\t", header=0)
+def js(dataframe1: pd.DataFrame, dataframe2: pd.DataFrame):
+
+    # Assert that both dataframes contain 20 columns
+    assert dataframe1.shape[1] == 20 and dataframe2.shape[1] == 20, "Both dataframes must contain 20 columns"
+
+    # Assert that both dataframes contain the same number of rows
+    assert dataframe1.shape[0] == dataframe2.shape[0], "Both dataframes must contain the same number of rows"
 
     # Average of the two profiles
-    m = (df1 + df2) / 2
+    m = (dataframe1 + dataframe2) / 2
 
     # Compute the Kullback-Leibler divergence
-    kl1 = np.sum(df1 * np.log(df1 / m), axis=1)
-    kl2 = np.sum(df2 * np.log(df2 / m), axis=1)
+    kl1 = np.sum(dataframe1 * np.log(dataframe1 / m), axis=1)
+    kl2 = np.sum(dataframe2 * np.log(dataframe2 / m), axis=1)
 
     return (kl1 + kl2) / 2

@@ -7,10 +7,19 @@ from libraries import js
 
 def main(file1: str, file2: str, file3: str, file4: str, output_dir: str):
 
+    df1 = pd.read_csv(file1, sep="\t", header=0, index_col=0)
+    df2 = pd.read_csv(file2, sep="\t", header=0, index_col=0)
+    df3 = pd.read_csv(file3, sep="\t", header=0, index_col=0)
+    df4 = pd.read_csv(file4, sep="\t", header=0, index_col=0)
+
     # Calculate KL for base subset1; base subset2; subset1 vs subset2
-    distance1 = js(file1, file2)
-    distance2 = js(file3, file4)
-    distance3 = js(file1, file3)
+    distance1 = js(df1, df2)
+    distance2 = js(df3, df4)
+
+    avg_sub_1 = (df1 + df2) / 2
+    avg_sub_2 = (df3 + df4) / 2
+
+    distance3 = js(avg_sub_1, avg_sub_2)
 
     distance1.to_csv(output_dir+"/base_sub1.tsv", sep="\t", header=False)
     distance2.to_csv(output_dir+"/base_sub2.tsv", sep="\t", header=False)
