@@ -114,7 +114,7 @@ def read_profiles(path):
     return pd.read_csv(path, sep="\t", skiprows=1, header=None, names="site,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y".split(","))
 
 
-def js(dataframe1: pd.DataFrame, dataframe2: pd.DataFrame):
+def js(dataframe1: pd.DataFrame, dataframe2: pd.DataFrame) -> pd.DataFrame:
 
     # Assert that both dataframes contain 20 columns
     assert dataframe1.shape[1] == 20 and dataframe2.shape[1] == 20, "Both dataframes must contain 20 columns"
