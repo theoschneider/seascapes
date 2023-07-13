@@ -48,6 +48,38 @@ def write_fasta(dico_fasta, output):
     print(f"Written {len(dico_fasta)} sequences to {output}")
 
 
+def filter_fasta(dico_fasta1, dico_fasta2):
+    filter1 = [False] * len(list(dico_fasta1.values())[0])
+    filter2 = [False] * len(list(dico_fasta2.values())[0])
+
+    # Iterate over every nucleotide position
+    for i in range(len(list(dico_fasta1.values())[0])):
+        for seq1 in dico_fasta1.values():
+            if seq1[i] in "ATGC":
+                filter1[i] = True
+                break
+        for seq2 in dico_fasta2.values():
+            if seq2[i] in "ATGC":
+                filter2[i] = True
+                break
+
+    # Initialize the output list with False values
+    output_list = [False] * len(filter1)
+
+    # If at least one of the lists has a True at the current position
+    for i in range(len(filter1)):
+        if filter1[i] or filter2[i]:
+            output_list[i] = True
+
+    # Filter the sequences
+    for seq_id in dico_fasta1.keys():
+        dico_fasta1[seq_id] = "".join([dico_fasta1[seq_id][i] for i in range(len(output_list)) if output_list[i]])
+    for seq_id in dico_fasta2.keys():
+        dico_fasta2[seq_id] = "".join([dico_fasta2[seq_id][i] for i in range(len(output_list)) if output_list[i]])
+
+    return dico_fasta1, dico_fasta2
+
+
 def write_ali(dico_fasta, output):
     outfile = gzip.open(output, 'wt') if output.endswith(".gz") else open(output, 'w')
     # Assert that all sequences have the same length

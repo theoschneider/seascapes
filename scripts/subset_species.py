@@ -1,6 +1,7 @@
 import argparse
 from ete3 import Tree
 import pandas as pd
+from libraries import open_fasta, write_fasta, filter_fasta
 
 
 def main(tree_path: str, fasta_path: str, subset_path: str, outdir: str):
@@ -17,27 +18,18 @@ def main(tree_path: str, fasta_path: str, subset_path: str, outdir: str):
     tree1.prune(subset, preserve_branch_length=True)
     tree2.prune(list(set(tree2.get_leaf_names()) - set(subset)), preserve_branch_length=True)
 
-    # Split the fasta files in 2 (according to subset argument)
-    with open(fasta_path, 'r') as f:
-        fasta = f.readlines()
+    # Open the 2 fasta and split them
+    fasta1 = open_fasta(fasta_path, filter_species=subset)
+    fasta2 = open_fasta(fasta_path, filter_species=list(tree2.get_leaf_names()))
 
-    fasta1 = ""
-    fasta2 = ""
+    fasta1, fasta2 = filter_fasta(fasta1, fasta2)
 
+    # Check that there are no empty sequences
+    for seq_id in fasta1.keys():
+        assert fasta1[seq_id] != len(fasta1[seq_id]) * "-", f"The sequence {seq_id} is empty!"
 
-    for i in range(0, len(fasta), 2):
-
-        sp = fasta[i][1:].strip()
-        seq = fasta[i+1].strip()
-
-        # Check that there are no empty sequences
-        assert seq != len(seq) * "-", "One or more sequences are empty!"
-
-        # Look for species name in the tree file and append the corresponding fasta sequence to the right file
-        if sp in tree1.get_leaf_names():
-            fasta1 += ">" + sp + "\n" + seq + "\n"
-        else:
-            fasta2 += ">" + sp + "\n" + seq + "\n"
+    for seq_id in fasta2.keys():
+        assert fasta2[seq_id] != len(fasta2[seq_id]) * "-", f"The sequence {seq_id} is empty!"
 
     # Check that there are at least 20 species in each subset
     assert len(tree1.get_leaf_names()) >= 20 and len(tree2.get_leaf_names()) >= 20, \
@@ -50,11 +42,8 @@ def main(tree_path: str, fasta_path: str, subset_path: str, outdir: str):
     with open(outdir + "subset2.rootree", 'w') as f:
         f.write(tree2.write(format=1))
 
-    with open(outdir + "subset1.fasta", 'w') as f:
-        f.write(fasta1)
-
-    with open(outdir + "subset2.fasta", 'w') as f:
-        f.write(fasta2)
+    write_fasta(fasta1, outdir + "subset1.fasta")
+    write_fasta(fasta2, outdir + "subset2.fasta")
 
 
 if __name__ == '__main__':
