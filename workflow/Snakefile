@@ -1,16 +1,14 @@
 import os
-import socket
 import pandas as pd
-import random
-from ete3 import Tree
-from Bio import SeqIO
+from scripts.libraries import js
+
 
 configfile: 'config/config.yaml'
 
 folder = os.path.abspath('.')
-fasta_folder = f"{folder}/data/omm_NT_fasta.v10c_116"
-tree_folder = f"{folder}/data/omm_RooTree.v10b_116"
-xml_folder = f"{folder}/data/omm_markers"
+fasta_folder = "data/omm_NT_fasta.v10c_116"
+tree_folder = "data/omm_RooTree.v10b_116"
+xml_folder = "data/omm_markers"
 
 bayescode_path = {}
 
@@ -27,7 +25,7 @@ for executable in ["mutselomega", "readmutselomega"]:
     print(f"Found {executable} at {exec_path}")
 
 # Filter genes
-genes_summary = pd.read_csv(f"{folder}/data/omm_genes_summary.csv", header=0, index_col=None)
+genes_summary = pd.read_csv("data/genes_summary.csv", header=0, index_col=None)
 print(f"Looking at {len(genes_summary)} genes...")
 genes_summary = genes_summary[(genes_summary['s1_length'] >= 1) & (genes_summary['s2_length'] >= 1) &
                               (genes_summary['s1_species'] >= 20) & (genes_summary['s2_species'] >= 20)]
@@ -42,30 +40,31 @@ points = config['points']
 burn_in = config['burn_in']
 
 
-localrules: all,filter,
+localrules: all,subset
 
 rule all:
     input:
-        expand(f"{folder}/processed/{{CDS}}/distance.csv", CDS=CDS_list)
+        expand("processed/{CDS}/distance.tsv", CDS=CDS_list)
 
 rule subset:
     input:
-        fasta = f"{folder}/data/omm_NT_fasta.v10c_116/{{CDS}}_NT.fasta",
-        tree = f"{folder}/data/omm_RooTree.v10b_116/{{CDS}}_NT.rootree",
-        clade = f"{folder}/data/clades/Glires.tsv",
+        script = "workflow/scripts/subset.py",
+        fasta = "data/omm_NT_fasta.v10c_116/{CDS}_NT.fasta",
+        tree = "data/omm_RooTree.v10b_116/{CDS}_NT.rootree",
+        clade = "data/clades/Glires.tsv",
     output:
-        expand(f"{folder}/processed/{{CDS}}/Glires.{{subset}}.phy", subset=["Include", "Exclude"]),
-        expand(f"{folder}/processed/{{CDS}}/Glires.{{subset}}.rootree", subset=["Include", "Exclude"])
+        expand("processed/{{CDS}}/Glires.{subset}.phy", subset=["Include", "Exclude"]),
+        expand("processed/{{CDS}}/Glires.{subset}.rootree", subset=["Include", "Exclude"])
     shell:
-        "python3 {folder}/scripts/subset.py --fasta {input.fasta} --tree {input.tree} --subset {input.clade} --outdir {folder}/processed/{wildcards.CDS}/Glires"
+        "python3 {input.script} --fasta {input.fasta} --tree {input.tree} --subset {input.clade} --outdir {folder}/processed/{wildcards.CDS}/Glires"
 
 rule run_bayescode:
     input:
         bin = bayescode_path['mutselomega'],
-        phy = f"{folder}/processed/{{CDS}}/Glires.{{subset}}.phy",
-        tree = f"{folder}/processed/{{CDS}}/Glires.{{subset}}.rootree",
+        phy = "processed/{CDS}/Glires.{subset}.phy",
+        tree = "processed/{CDS}/Glires.{subset}.rootree",
     output:
-        f"{folder}/processed/{{CDS}}/Glires.{{subset}}.chain"
+        "processed/{CDS}/Glires.{subset}.chain"
     params:
         time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
     shell:
@@ -74,22 +73,22 @@ rule run_bayescode:
 rule read_bayescode:
     input:
         bin = bayescode_path['readmutselomega'],
-        chain = f"{folder}/processed/{{CDS}}/{{subset}}.chain",
+        chain = "processed/{CDS}/Glires.{subset}.chain",
     params:
         time="0-10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
     output:
-        f"{folder}/processed/{{CDS}}/{{subset}}.siteprofiles"
+        "processed/{CDS}/{subset}.siteprofiles"
     shell:
         "{input.bin} --every 1 --until 2000 --burnin 1000 --ss {folder}/processed/{wildcards.CDS}/Glires.{wildcards.subset}"
 
 # pour un gène, expand pour tout les modèles
 rule distance:
     input:
-        expand(f"{folder}/processed/{{CDS}}/{{subset}}.siteprofiles", subset=["Include", "Exclude"])
+        expand("processed/{{CDS}}/{subset}.siteprofiles", subset=["Include", "Exclude"])
     output:
-        f"{folder}/processed/{{CDS}}/distance.csv"
-
-# merge
-
-
-# plot
+        "processed/{CDS}/distance.tsv"
+    run:
+        df1 = pd.read_csv(input[0],sep="\t",header=0,index_col=0)
+        df2 = pd.read_csv(input[1],sep="\t",header=0,index_col=0)
+        distance = js(df1, df2)
+        distance.to_csv(output, sep="\t")

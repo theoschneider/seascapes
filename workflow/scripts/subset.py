@@ -56,4 +56,4 @@ if __name__ == '__main__':
                         help="Path to the output directory")
 
     args = parser.parse_args()
-    main(args.tree_path, args.fasta_path, args.subset, args.outdir)
+    main(args.tree_path, args.fasta_path, args.subset_path, args.outdir)
