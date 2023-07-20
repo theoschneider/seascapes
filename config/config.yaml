@@ -1,3 +1,4 @@
+all_genes: False
 CDS_start: 0
 CDS_end: 6
 burn_in: 5

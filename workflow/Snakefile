@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-from scripts.libraries import js
 
 
 configfile: 'config/config.yaml'
@@ -30,7 +29,12 @@ print(f"Looking at {len(genes_summary)} genes...")
 genes_summary = genes_summary[(genes_summary['s1_length'] >= 1) & (genes_summary['s2_length'] >= 1) &
                               (genes_summary['s1_species'] >= 20) & (genes_summary['s2_species'] >= 20)]
 print(f"Found {len(genes_summary)} genes with a tree length of at least 1 and at least 20 species in each subset...")
-CDS_list = genes_summary['gene'].tolist()[config['CDS_start']:config['CDS_end']]
+
+if config["all_genes"]:
+    CDS_list = genes_summary['gene'].tolist()
+else:
+    CDS_list = genes_summary['gene'].tolist()[config['CDS_start']:config['CDS_end']]
+
 print(f"Using {len(CDS_list)} genes.")
 
 models = {"sitemutsel": "--ncat 30",
