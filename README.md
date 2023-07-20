@@ -4,7 +4,7 @@ This repository is meant to provide the necessary scripts and data to reproduce 
 
 The experiments are meant to run on Linux/Unix/macOS operating systems.
 
-If problems and/or questions are encountered, feel free to [open issues](https://github.com/ThibaultLatrille/Seascapes/issues).
+If problems and/or questions are encountered, feel free to [open issues](https://github.com/theoschneider/seascapes/issues).
 
 ## 0. Local copy
 Clone the repository and `cd` to the dir.
@@ -17,7 +17,7 @@ cd seascapes
 
 ### General dependencies
 
-Install python3 packages
+Install python3 packages.
 ```
 sudo apt install -qq -y python3-dev python3-pip snakemake
 pip3 install --user scipy numpy matplotlib pandas statsmodels
@@ -32,15 +32,15 @@ snakemake -k -j 8
 ```
 
 ## 3. Add features
-You made modifications to one of the python script, a notebook, this README.md, or you added new features.
-You wish this work benefits to all (futur) users of this repository?
-Please, feel free to open a [pull-request](https://github.com/ThibaultLatrille/Seascapes/pulls)
+You made modifications to one of the python script, a notebook, this README.md, or you added new features?
+You wish this work benefits to all (future) users of this repository?
+Please, feel free to open a [pull-request](https://github.com/theoschneider/seascapes/pulls).
 
 ## Licence
 
 The MIT License (MIT)
 
-Copyright (c) 2019 Thibault Latrille
+Copyright (c) 2023 Théo Schneider
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
