@@ -1,4 +1,4 @@
 CDS_start: 0
 CDS_end: 6
-burn_in: 10
-points: 20
+burn_in: 5
+points: 10

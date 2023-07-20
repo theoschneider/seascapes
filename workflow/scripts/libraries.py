@@ -49,33 +49,28 @@ def write_fasta(dico_fasta, output):
 
 
 def filter_fasta(dico_fasta1, dico_fasta2):
-    filter1 = [False] * len(list(dico_fasta1.values())[0])
-    filter2 = [False] * len(list(dico_fasta2.values())[0])
+    n = len(list(dico_fasta1.values())[0])
 
-    # Iterate over every nucleotide position
-    for i in range(len(list(dico_fasta1.values())[0])):
-        for seq1 in dico_fasta1.values():
-            if seq1[i] in "ATGC":
-                filter1[i] = True
-                break
-        for seq2 in dico_fasta2.values():
-            if seq2[i] in "ATGC":
-                filter2[i] = True
-                break
+    bool_filter = []
 
-    # Initialize the output list with False values
-    output_list = [False] * len(filter1)
+    for nt in range(0, n, 3):
+        triplets1 = [seq[nt:nt + 3] for seq in dico_fasta1.values()]
+        triplets2 = [seq[nt:nt + 3] for seq in dico_fasta2.values()]
 
-    # If at least one of the lists has a True at the current position
-    for i in range(len(filter1)):
-        if filter1[i] or filter2[i]:
-            output_list[i] = True
+        if (triplets1.count("---") / len(triplets1)) > 0.5:
+            bool_filter.extend([False] * 3)
+
+        elif (triplets2.count("---") / len(triplets2)) > 0.5:
+            bool_filter.extend([False] * 3)
+
+        else:
+            bool_filter.extend([True] * 3)
 
     # Filter the sequences
     for seq_id in dico_fasta1.keys():
-        dico_fasta1[seq_id] = "".join([dico_fasta1[seq_id][i] for i in range(len(output_list)) if output_list[i]])
+        dico_fasta1[seq_id] = "".join([dico_fasta1[seq_id][i] for i in range(len(bool_filter)) if bool_filter[i]])
     for seq_id in dico_fasta2.keys():
-        dico_fasta2[seq_id] = "".join([dico_fasta2[seq_id][i] for i in range(len(output_list)) if output_list[i]])
+        dico_fasta2[seq_id] = "".join([dico_fasta2[seq_id][i] for i in range(len(bool_filter)) if bool_filter[i]])
 
     return dico_fasta1, dico_fasta2
 

@@ -67,8 +67,9 @@ rule run_bayescode:
         "processed/{CDS}/Glires.{subset}.chain"
     params:
         time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        until=config["points"]
     shell:
-        "{input.bin} -a {input.phy} -t {input.tree} -u 2000 {folder}/processed/{wildcards.CDS}/Glires.{wildcards.subset}"
+        "{input.bin} -a {input.phy} -t {input.tree} -u {params.until} {folder}/processed/{wildcards.CDS}/Glires.{wildcards.subset}"
 
 rule read_bayescode:
     input:
@@ -76,19 +77,17 @@ rule read_bayescode:
         chain = "processed/{CDS}/Glires.{subset}.chain",
     params:
         time="0-10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        until=config["points"],
+        burnin=config["burn_in"]
     output:
-        "processed/{CDS}/{subset}.siteprofiles"
+        "processed/{CDS}/Glires.{subset}.siteprofiles"
     shell:
-        "{input.bin} --every 1 --until 2000 --burnin 1000 --ss {folder}/processed/{wildcards.CDS}/Glires.{wildcards.subset}"
+        "{input.bin} --every 1 -u {params.until} --burnin {params.burnin} --ss {folder}/processed/{wildcards.CDS}/Glires.{wildcards.subset}"
 
-# pour un gène, expand pour tout les modèles
 rule distance:
     input:
-        expand("processed/{{CDS}}/{subset}.siteprofiles", subset=["Include", "Exclude"])
+        expand("processed/{{CDS}}/Glires.{subset}.siteprofiles", subset=["Include", "Exclude"])
     output:
         "processed/{CDS}/distance.tsv"
-    run:
-        df1 = pd.read_csv(input[0],sep="\t",header=0,index_col=0)
-        df2 = pd.read_csv(input[1],sep="\t",header=0,index_col=0)
-        distance = js(df1, df2)
-        distance.to_csv(output, sep="\t")
+    shell:
+        "python3 workflow/scripts/simple_distance.py --path1 {input[0]} --path2 {input[1]} --outpath {output}"
