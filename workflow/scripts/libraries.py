@@ -51,26 +51,26 @@ def write_fasta(dico_fasta, output):
 def filter_fasta(dico_fasta1, dico_fasta2):
     n = len(list(dico_fasta1.values())[0])
 
-    bool_filter = []
+    nt_filter = []
 
     for nt in range(0, n, 3):
-        triplets1 = [seq[nt:nt + 3] for seq in dico_fasta1.values()]
-        triplets2 = [seq[nt:nt + 3] for seq in dico_fasta2.values()]
+        aa1 = [codontable[seq[nt:nt + 3]] for seq in dico_fasta1.values()]
+        aa2 = [codontable[seq[nt:nt + 3]] for seq in dico_fasta2.values()]
 
-        if (triplets1.count("---") / len(triplets1)) > 0.5:
-            bool_filter.extend([False] * 3)
+        if (aa1.count("-") / len(aa1)) > 0.5:
+            nt_filter.extend([False] * 3)
 
-        elif (triplets2.count("---") / len(triplets2)) > 0.5:
-            bool_filter.extend([False] * 3)
+        elif (aa2.count("-") / len(aa2)) > 0.5:
+            nt_filter.extend([False] * 3)
 
         else:
-            bool_filter.extend([True] * 3)
+            nt_filter.extend([True] * 3)
 
     # Filter the sequences
     for seq_id in dico_fasta1.keys():
-        dico_fasta1[seq_id] = "".join([dico_fasta1[seq_id][i] for i in range(len(bool_filter)) if bool_filter[i]])
+        dico_fasta1[seq_id] = "".join([dico_fasta1[seq_id][i] for i in range(len(nt_filter)) if nt_filter[i]])
     for seq_id in dico_fasta2.keys():
-        dico_fasta2[seq_id] = "".join([dico_fasta2[seq_id][i] for i in range(len(bool_filter)) if bool_filter[i]])
+        dico_fasta2[seq_id] = "".join([dico_fasta2[seq_id][i] for i in range(len(nt_filter)) if nt_filter[i]])
 
     return dico_fasta1, dico_fasta2
 
