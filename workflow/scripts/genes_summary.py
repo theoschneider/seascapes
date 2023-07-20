@@ -11,13 +11,15 @@ def find_tree_length(input_tree):
         out_tree_length += node.dist
     return out_tree_length
 
+# Euarchontoglires = "Glires", "Scandentia", "Dermoptera", "Primates"
+# Glires = "Glires"
 
 # Read the species list
 df = pd.read_csv(folder + "data/species.tsv", sep="\t", header=0, index_col=None)
 
 # Convert the dataframe to a dictionary
 sp_dic = {df.iloc[i, 0]: df.iloc[i, 1] for i in range(len(df))}
-interest = {species for species in sp_dic.keys() if sp_dic[species] in {"Glires", "Scandentia", "Dermoptera", "Primates"}}
+interest = {species for species in sp_dic.keys() if sp_dic[species] in {"Glires"}}
 
 # Create empty out dictionary
 out = {"gene": [],
@@ -56,7 +58,7 @@ for file in tree_files:
 
     subset2_length = find_tree_length(subset2)
 
-    out["gene"].append(file.split("_NT")[0])
+    out["gene"].append("_".join(file.split("_")[0:2]))
     out["tree_length"].append(tree_length)
     out["tree_species"].append(len(tree.get_leaf_names()))
     out["s1_length"].append(subset1_length)
@@ -65,4 +67,4 @@ for file in tree_files:
     out["s2_species"].append(len(subset2.get_leaf_names()))
 
 out_df = pd.DataFrame.from_dict(out)
-out_df.to_csv(folder + "data/genes_summary.csv", header=True, index=False)
+out_df.to_csv(folder + "data/Glires_genes.csv", header=True, index=False)

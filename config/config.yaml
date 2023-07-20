@@ -1,5 +1,6 @@
 all_genes: False
 CDS_start: 0
 CDS_end: 6
-burn_in: 5
-points: 10
+burn_in: 2
+points: 5
+clade: "Glires"
