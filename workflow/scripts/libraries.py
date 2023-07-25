@@ -48,15 +48,37 @@ def write_fasta(dico_fasta, output):
     print(f"Written {len(dico_fasta)} sequences to {output}")
 
 
-def filter_fasta(dico_fasta1, dico_fasta2):
-    n = len(list(dico_fasta1.values())[0])
+def filter_fasta(dic_fasta1, dic_fasta2):
+    n = len(list(dic_fasta1.values())[0])
 
     nt_filter = []
 
-    for nt in range(0, n, 3):
-        aa1 = [codontable[seq[nt:nt + 3]] for seq in dico_fasta1.values()]
-        aa2 = [codontable[seq[nt:nt + 3]] for seq in dico_fasta2.values()]
+    filt_dic1 = {seq_id: "" for seq_id in dic_fasta1.keys()}
+    filt_dic2 = {seq_id: "" for seq_id in dic_fasta2.keys()}
 
+    for nt in range(0, n, 3):
+        aa1 = []
+        aa2 = []
+
+        # Get all amino acids at this position (both dict)
+        # Also: change the triplet to "---" if undefined, to avoid other characters
+        for seq_id in dic_fasta1.keys():
+            aa = codontable[dic_fasta1[seq_id][nt:nt + 3]]
+            if aa == "-":
+                filt_dic1[seq_id] += "---"
+            else:
+                filt_dic1[seq_id] += dic_fasta1[seq_id][nt:nt + 3]
+            aa1.append(aa)
+
+        for seq_id in dic_fasta2.keys():
+            aa = codontable[dic_fasta2[seq_id][nt:nt + 3]]
+            if aa == "-":
+                filt_dic2[seq_id] += "---"
+            else:
+                filt_dic2[seq_id] += dic_fasta2[seq_id][nt:nt + 3]
+            aa2.append(aa)
+
+        # If more than 50% of the sequences have a gap, remove the position
         if (aa1.count("-") / len(aa1)) > 0.5:
             nt_filter.extend([False] * 3)
 
@@ -66,13 +88,18 @@ def filter_fasta(dico_fasta1, dico_fasta2):
         else:
             nt_filter.extend([True] * 3)
 
-    # Filter the sequences
-    for seq_id in dico_fasta1.keys():
-        dico_fasta1[seq_id] = "".join([dico_fasta1[seq_id][i] for i in range(len(nt_filter)) if nt_filter[i]])
-    for seq_id in dico_fasta2.keys():
-        dico_fasta2[seq_id] = "".join([dico_fasta2[seq_id][i] for i in range(len(nt_filter)) if nt_filter[i]])
+    # Filter the sequences and remove empty sequences
+    for seq_id in filt_dic1.keys():
+        seq = "".join([filt_dic1[seq_id][i] for i in range(len(nt_filter)) if nt_filter[i]])
+        if seq != len(seq) * "-":
+            filt_dic1[seq_id] = seq
 
-    return dico_fasta1, dico_fasta2
+    for seq_id in filt_dic2.keys():
+        seq = "".join([filt_dic2[seq_id][i] for i in range(len(nt_filter)) if nt_filter[i]])
+        if seq != len(seq) * "-":
+            filt_dic2[seq_id] = seq
+
+    return filt_dic1, filt_dic2
 
 
 def write_ali(dico_fasta, output):

@@ -25,12 +25,9 @@ def main(tree_path: str, fasta_path: str, subset_path: str, outdir: str):
 
     fasta1, fasta2 = filter_fasta(fasta1, fasta2)
 
-    # Check that there are no empty sequences
-    for seq_id in fasta1.keys():
-        assert fasta1[seq_id] != len(fasta1[seq_id]) * "-", f"The sequence {seq_id} is empty!"
-
-    for seq_id in fasta2.keys():
-        assert fasta2[seq_id] != len(fasta2[seq_id]) * "-", f"The sequence {seq_id} is empty!"
+    # Re-prune because some species may have been removed
+    tree1.prune(list(fasta1.keys()), preserve_branch_length=True)
+    tree2.prune(list(fasta2.keys()), preserve_branch_length=True)
 
     # Write the 2 subtrees and 2 fasta files
     with open(outdir + ".Include.rootree", 'w') as f:
