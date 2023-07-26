@@ -1,6 +1,6 @@
 all_genes: False
 CDS_start: 0
-CDS_end: 3
-burn_in: 1
-points: 2
+CDS_end: 9
+burn_in: 1000
+points: 2000
 clade: "Euarchontoglires"
