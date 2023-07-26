@@ -2,9 +2,12 @@ import argparse
 from ete3 import Tree
 import pandas as pd
 from libraries import open_fasta, write_ali, filter_fasta
+import os
 
 
 def main(tree_path: str, fasta_path: str, subset_path: str, outdir: str):
+
+    os.makedirs(os.path.dirname(outdir), exist_ok=True)
 
     # Read the tree
     tree1 = Tree(tree_path, format=1)
@@ -15,17 +18,13 @@ def main(tree_path: str, fasta_path: str, subset_path: str, outdir: str):
     subset1 = set(subset[0].tolist()) & set(tree1.get_leaf_names())
     subset2 = set(tree2.get_leaf_names()) - set(subset1)
 
-    # Split the tree in 2 subtrees (according to subset argument)
-    tree1.prune(subset1, preserve_branch_length=True)
-    tree2.prune(subset2, preserve_branch_length=True)
-
     # Open the 2 fasta and split them
     fasta1 = open_fasta(fasta_path, filter_species=subset1)
     fasta2 = open_fasta(fasta_path, filter_species=subset2)
 
     fasta1, fasta2 = filter_fasta(fasta1, fasta2)
 
-    # Re-prune because some species may have been removed
+    # Split the tree in 2 subtrees
     tree1.prune(list(fasta1.keys()), preserve_branch_length=True)
     tree2.prune(list(fasta2.keys()), preserve_branch_length=True)
 

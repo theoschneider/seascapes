@@ -89,15 +89,19 @@ def filter_fasta(dic_fasta1, dic_fasta2):
             nt_filter.extend([True] * 3)
 
     # Filter the sequences and remove empty sequences
-    for seq_id in filt_dic1.keys():
+    for seq_id in dic_fasta1.keys():
         seq = "".join([filt_dic1[seq_id][i] for i in range(len(nt_filter)) if nt_filter[i]])
         if seq != len(seq) * "-":
             filt_dic1[seq_id] = seq
+        else:
+            del filt_dic1[seq_id]
 
-    for seq_id in filt_dic2.keys():
+    for seq_id in dic_fasta2.keys():
         seq = "".join([filt_dic2[seq_id][i] for i in range(len(nt_filter)) if nt_filter[i]])
         if seq != len(seq) * "-":
             filt_dic2[seq_id] = seq
+        else:
+            del filt_dic2[seq_id]
 
     return filt_dic1, filt_dic2
 
