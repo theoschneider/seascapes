@@ -23,10 +23,8 @@ for executable in ["mutselomega", "readmutselomega"]:
     bayescode_path[executable] = exec_path
     print(f"Found {executable} at {exec_path}")
 
-clade = config['clade']
-
 # Filter genes
-genes_summary = pd.read_csv(f"data/{clade}_genes.csv", header=0, index_col=None)
+genes_summary = pd.read_csv(f"data/{config['clade']}_genes.csv", header=0, index_col=None)
 print(f"Looking at {len(genes_summary)} genes...")
 genes_summary = genes_summary[(genes_summary['s1_length'] >= 1) & (genes_summary['s2_length'] >= 1) &
                               (genes_summary['s1_species'] >= 20) & (genes_summary['s2_species'] >= 20)]
@@ -58,42 +56,42 @@ rule subset:
         script = "workflow/scripts/subset.py",
         fasta = "data/omm_NT_fasta.v10c_116/{CDS}_NT.fasta",
         tree = "data/omm_RooTree.v10b_116/{CDS}_NT.rootree",
-        species_list = f"data/clades/{clade}.tsv",
+        species_list = "data/clades/{clade}.tsv",
     output:
         expand("processed/{{CDS}}/{{clade}}.{subset}.phy", subset=["Include", "Exclude"]),
         expand("processed/{{CDS}}/{{clade}}.{subset}.rootree", subset=["Include", "Exclude"])
     shell:
-        "python3 {input.script} --fasta {input.fasta} --tree {input.tree} --subset {input.species_list} --outdir {folder}/processed/{wildcards.CDS}/{clade}"
+        "python3 {input.script} --fasta {input.fasta} --tree {input.tree} --subset {input.species_list} --outdir {folder}/processed/{wildcards.CDS}/{wildcards.clade}"
 
 rule run_bayescode:
     input:
         bin = bayescode_path['mutselomega'],
-        phy = f"processed/{{CDS}}/{clade}.{{subset}}.phy",
-        tree = f"processed/{{CDS}}/{clade}.{{subset}}.rootree",
+        phy = "processed/{CDS}/{clade}.{subset}.phy",
+        tree = "processed/{CDS}/{clade}.{subset}.rootree",
     output:
-        f"processed/{{CDS}}/{clade}.{{subset}}.chain"
+        "processed/{CDS}/{clade}.{subset}.chain"
     params:
         time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"]
     shell:
-        "{input.bin} -a {input.phy} -t {input.tree} -u {params.until} {folder}/processed/{wildcards.CDS}/{clade}.{wildcards.subset}"
+        "{input.bin} -a {input.phy} -t {input.tree} -u {params.until} {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}"
 
 rule read_bayescode:
     input:
         bin = bayescode_path['readmutselomega'],
-        chain = f"processed/{{CDS}}/{clade}.{{subset}}.chain",
+        chain = "processed/{CDS}/{clade}.{subset}.chain",
     params:
         time="0-10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"],
         burnin=config["burn_in"]
     output:
-        f"processed/{{CDS}}/{clade}.{{subset}}.siteprofiles"
+        "processed/{CDS}/{clade}.{subset}.siteprofiles"
     shell:
-        "{input.bin} --every 1 -u {params.until} --burnin {params.burnin} --ss {folder}/processed/{wildcards.CDS}/{clade}.{wildcards.subset}"
+        "{input.bin} --every 1 -u {params.until} --burnin {params.burnin} --ss {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}"
 
 rule distance:
     input:
-        expand(f"processed/{{{{CDS}}}}/{clade}.{{subset}}.siteprofiles", subset=["Include", "Exclude"])
+        expand("processed/{{CDS}}/{clade}.{subset}.siteprofiles", subset=["Include", "Exclude"], clade=[config['clade']])
     output:
         "processed/{CDS}/distance.tsv"
     shell:
