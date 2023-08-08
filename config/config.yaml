@@ -1,4 +1,4 @@
-all_genes: False
+all_genes: True
 CDS_start: 0
 CDS_end: 12
 burn_in: 1
