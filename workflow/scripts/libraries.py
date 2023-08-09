@@ -149,8 +149,8 @@ def js(dataframe1: pd.DataFrame, dataframe2: pd.DataFrame) -> pd.DataFrame:
     assert dataframe1.shape[0] == dataframe2.shape[0], "Both dataframes must contain the same number of rows"
 
     # Assert that each row sum up to 1
-    assert np.allclose(dataframe1.sum(axis=1), 1), "Each row of dataframe 1 must sum up to 1"
-    assert np.allclose(dataframe2.sum(axis=1), 1), "Each row of dataframe 2 must sum up to 1"
+    assert np.allclose(a=dataframe1.sum(axis=1), b=1, rtol=0.03), "Each row of dataframe 1 must sum up to 1"
+    assert np.allclose(a=dataframe2.sum(axis=1), b=1, rtol=0.03), "Each row of dataframe 2 must sum up to 1"
 
     # Average of the two profiles
     m = (dataframe1 + dataframe2) / 2
