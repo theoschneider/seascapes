@@ -12,6 +12,7 @@ def main(tree_path: str, fasta_path: str, subset_path: str, outdir: str):
     # Read the tree
     tree1 = Tree(tree_path, format=1)
     tree2 = tree1.copy()
+    full_tree = tree1.copy()
 
     # Read the subset file
     subset = pd.read_csv(subset_path, header=None, index_col=None)
@@ -23,20 +24,26 @@ def main(tree_path: str, fasta_path: str, subset_path: str, outdir: str):
     fasta2 = open_fasta(fasta_path, filter_species=subset2)
 
     fasta1, fasta2 = filter_fasta(fasta1, fasta2)
+    full_fasta = {**fasta1, **fasta2}
 
     # Split the tree in 2 subtrees
     tree1.prune(list(fasta1.keys()), preserve_branch_length=True)
     tree2.prune(list(fasta2.keys()), preserve_branch_length=True)
+    full_tree.prune(list(full_fasta.keys()), preserve_branch_length=True)
 
-    # Write the 2 subtrees and 2 fasta files
+    # Write the 2 subtrees, 2 phy files, full tree and full phy
     with open(outdir + ".Include.rootree", 'w') as f:
         f.write(tree1.write(format=1))
 
     with open(outdir + ".Exclude.rootree", 'w') as f:
         f.write(tree2.write(format=1))
 
+    with open(outdir + ".Whole.rootree", 'w') as f:
+        f.write(full_tree.write(format=1))
+
     write_ali(fasta1, outdir + ".Include.phy")
     write_ali(fasta2, outdir + ".Exclude.phy")
+    write_ali(full_fasta, outdir + ".Whole.phy")
 
 
 if __name__ == '__main__':
