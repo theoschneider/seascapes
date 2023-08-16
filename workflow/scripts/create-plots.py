@@ -47,7 +47,7 @@ for folder_name in genes_list:
     plt.plot(distance.iloc[:, 0], distance.iloc[:, 1])
     plt.xlabel("Position")
     plt.ylabel("Distance")
-    plt.title("Jensen-Shannon divergence between two subsets, compared to base distance for each subset")
+    plt.title("Jensen-Shannon divergence between two subsets")
     plt.tight_layout()
     # Create directory and save the plot
     os.makedirs(os.path.join(SOURCE_DIR, "results", folder_name), exist_ok=True)
