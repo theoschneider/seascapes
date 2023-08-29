@@ -85,7 +85,6 @@ for folder_name in genes_list:
     all_omega0.extend(omega0)
 
     # Plot distance vs omega and save it
-    # yfit, ci = linearfit(omega, distance.iloc[:, 1])
     yfit, lower_ci, upper_ci = linearfit(omega, distance.iloc[:, 1].tolist(), np.linspace(min(omega), max(omega), 100))
     plt.figure(figsize=(7, 7))
     plt.scatter(omega, distance.iloc[:, 1], s=2)
@@ -98,8 +97,11 @@ for folder_name in genes_list:
     plt.savefig(SOURCE_DIR + "/results/" + folder_name + "/distance-vs-omega.pdf")
 
     # Plot distance vs omega0 and save it
+    yfit, lower_ci, upper_ci = linearfit(omega0, distance.iloc[:, 1].tolist(), np.linspace(min(omega0), max(omega0), 100))
     plt.figure(figsize=(7, 7))
     plt.scatter(omega0, distance.iloc[:, 1], s=2)
+    plt.fill_between(x=np.linspace(min(omega0), max(omega0), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
+    plt.plot(np.linspace(min(omega0), max(omega0), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
     plt.xlabel("Omega 0")
     plt.ylabel("Distance")
     plt.title("Distance vs omega 0")
@@ -107,8 +109,11 @@ for folder_name in genes_list:
     plt.savefig(SOURCE_DIR + "/results/" + folder_name + "/distance-vs-omega0.pdf")
 
     # Plot distance vs omegaA and save it
+    yfit, lower_ci, upper_ci = linearfit(omegaA, distance.iloc[:, 1].tolist(), np.linspace(min(omegaA), max(omegaA), 100))
     plt.figure(figsize=(7, 7))
     plt.scatter(omegaA, distance.iloc[:, 1], s=2)
+    plt.fill_between(x=np.linspace(min(omegaA), max(omegaA), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
+    plt.plot(np.linspace(min(omegaA), max(omegaA), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
     plt.xlabel("OmegaA")
     plt.ylabel("Distance")
     plt.title("Distance vs omegaA (omega - omega0)")
@@ -119,8 +124,11 @@ for folder_name in genes_list:
 all_omegaA = [all_omega[i] - all_omega0[i] for i in range(len(all_omega))]
 
 # Plot distance vs total omega and save it
+yfit, lower_ci, upper_ci = linearfit(all_omega, all_distance, np.linspace(min(all_omega), max(all_omega), 100))
 plt.figure(figsize=(7, 7))
 plt.scatter(all_omega, all_distance, s=2)
+plt.fill_between(x=np.linspace(min(all_omega), max(all_omega), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
+plt.plot(np.linspace(min(all_omega), max(all_omega), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
 plt.xlabel("Omega")
 plt.ylabel("Distance")
 plt.title("Distance vs omega")
@@ -128,8 +136,11 @@ plt.tight_layout()
 plt.savefig(SOURCE_DIR + "/results/allgenes-distance-vs-omega.pdf")
 
 # Plot distance vs total omega0 and save it
+yfit, lower_ci, upper_ci = linearfit(all_omega0, all_distance, np.linspace(min(all_omega0), max(all_omega0), 100))
 plt.figure(figsize=(7, 7))
 plt.scatter(all_omega0, all_distance, s=2)
+plt.fill_between(x=np.linspace(min(all_omega0), max(all_omega0), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
+plt.plot(np.linspace(min(all_omega0), max(all_omega0), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
 plt.xlabel("Omega 0")
 plt.ylabel("Distance")
 plt.title("Distance vs omega 0")
@@ -137,8 +148,11 @@ plt.tight_layout()
 plt.savefig(SOURCE_DIR + "/results/allgenes-distance-vs-omega0.pdf")
 
 # Plot distance vs total omegaA and save it
+yfit, lower_ci, upper_ci = linearfit(all_omegaA, all_distance, np.linspace(min(all_omegaA), max(all_omegaA), 100))
 plt.figure(figsize=(7, 7))
 plt.scatter(all_omegaA, all_distance, s=2)
+plt.fill_between(x=np.linspace(min(all_omegaA), max(all_omegaA), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
+plt.plot(np.linspace(min(all_omegaA), max(all_omegaA), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
 plt.xlabel("OmegaA")
 plt.ylabel("Distance")
 plt.title("Distance vs omegaA (omega - omega0)")
