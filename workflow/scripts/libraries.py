@@ -4,6 +4,8 @@ import shutil
 from collections import defaultdict
 import numpy as np
 import pandas as pd
+import scipy.stats as stats
+import statsmodels.api as sm
 
 # Define the codon table
 codontable = defaultdict(lambda: "-")
@@ -160,3 +162,25 @@ def js(dataframe1: pd.DataFrame, dataframe2: pd.DataFrame) -> pd.DataFrame:
     kl2 = np.sum(dataframe2 * np.log(dataframe2 / m), axis=1)
 
     return (kl1 + kl2) / 2
+
+
+def linearfit(x, y, x_new, alpha=0.05):
+    x_with_const = sm.add_constant(x)
+    model = sm.OLS(y, x_with_const).fit()
+
+    x_new_with_const = sm.add_constant(x_new)
+    yfit = model.predict(x_new_with_const)
+    residuals = y - model.predict(x_with_const)
+
+    dof = len(x) - model.df_model - 1
+    t_critical = stats.t.ppf(1 - alpha / 2, df=dof)
+    se_residuals = np.sqrt(np.sum(residuals ** 2) / dof)
+
+    se_predictions = se_residuals * np.sqrt(1 + 1 / len(x_new) + (x_new - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
+
+    margin_of_error = t_critical * se_predictions
+
+    lower_ci = yfit - margin_of_error
+    upper_ci = yfit + margin_of_error
+
+    return yfit, lower_ci, upper_ci

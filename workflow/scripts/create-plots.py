@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+from libraries import linearfit
+import numpy as np
 
 # Set the source directory
 SOURCE_DIR = "/Users/theo/THÉO/seascapes"
@@ -63,6 +65,8 @@ for folder_name in genes_list:
     fig, ax1 = plt.subplots()
     col1 = "#2674D9"
     col2 = "#D92674"
+    width = len(distance) / 20
+    fig.set_size_inches(width, 7)
     ax1.set_xlabel("Position")
     ax1.set_ylabel("Distance", color=col1)
     ax1.bar(x=distance.iloc[:, 0]-0.25, height=distance.iloc[:, 1], width=0.5, color=col1, alpha=1)
@@ -81,8 +85,12 @@ for folder_name in genes_list:
     all_omega0.extend(omega0)
 
     # Plot distance vs omega and save it
+    # yfit, ci = linearfit(omega, distance.iloc[:, 1])
+    yfit, lower_ci, upper_ci = linearfit(omega, distance.iloc[:, 1].tolist(), np.linspace(min(omega), max(omega), 100))
     plt.figure(figsize=(7, 7))
     plt.scatter(omega, distance.iloc[:, 1], s=2)
+    plt.fill_between(x=np.linspace(min(omega), max(omega), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
+    plt.plot(np.linspace(min(omega), max(omega), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
     plt.xlabel("Omega")
     plt.ylabel("Distance")
     plt.title("Distance vs omega")
