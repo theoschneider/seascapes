@@ -176,7 +176,7 @@ def linearfit(x, y, x_new, alpha=0.05):
     t_critical = stats.t.ppf(1 - alpha / 2, df=dof)
     se_residuals = np.sqrt(np.sum(residuals ** 2) / dof)
 
-    se_predictions = se_residuals * np.sqrt(1 + 1 / len(x_new) + (x_new - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
+    se_predictions = se_residuals * np.sqrt(1 / len(x_new) + (x_new - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
 
     margin_of_error = t_critical * se_predictions
 

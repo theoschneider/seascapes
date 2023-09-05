@@ -41,14 +41,24 @@ all_omega = []
 all_omega0 = []
 all_distance = []
 
+# Initialize empty lists for 1 point per gene
+omegaA_per_gene = []
+distance_per_gene = []
+all_names = []
+
 # Iterate over the contents of SOURCE_DIR and process folders
 for folder_name in genes_list:
     # For every folder
     folder_path = os.path.join(SOURCE_DIR, "processed", folder_name)
     print(f"Processing folder: {folder_path}")
+    name = folder_name.split("_")[1]
+    all_names.append(name)
 
     # Open distance.tsv
     distance = pd.read_csv(os.path.join(folder_path, "distance.tsv"), sep="\t", header=0, index_col=None)
+
+    # Append distance to the distance_per_gene list
+    distance_per_gene.append(np.mean(distance.iloc[:, 1].tolist()))
 
     # Append distance to the all_distance dataframe
     all_distance.extend(distance.iloc[:, 1].tolist())
@@ -57,6 +67,10 @@ for folder_name in genes_list:
     omega = pd.read_csv(SOURCE_DIR + "/processed/" + folder_name + "/" + CLADE + ".Whole.omega.ci0.025.tsv", sep="\t", header=0, index_col=0)
     omega0 = pd.read_csv(SOURCE_DIR + "/processed/" + folder_name + "/" + CLADE + ".Whole.omega_0.ci0.025.tsv", sep="\t", header=0, index_col=0)
 
+    # Append omegaA to the omegaA_per_gene list
+    omegaA_per_gene.append(omega.iloc[0, 1] - omega0.iloc[0, 1])
+
+    # Keep only the col of interest and convert to lists
     omega = omega.iloc[1:, 1].tolist()
     omega0 = omega0.iloc[1:, 1].tolist()
     omegaA = [omega[i] - omega0[i] for i in range(len(omega))]
@@ -92,7 +106,7 @@ for folder_name in genes_list:
     plt.plot(np.linspace(min(omega), max(omega), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
     plt.xlabel("Omega")
     plt.ylabel("Distance")
-    plt.title("Distance vs omega")
+    plt.title("Distance as a function of omega for gene " + name)
     plt.tight_layout()
     plt.savefig(SOURCE_DIR + "/results/" + folder_name + "/distance-vs-omega.pdf")
 
@@ -104,7 +118,7 @@ for folder_name in genes_list:
     plt.plot(np.linspace(min(omega0), max(omega0), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
     plt.xlabel("Omega 0")
     plt.ylabel("Distance")
-    plt.title("Distance vs omega 0")
+    plt.title("Distance as a function of omega0 for gene " + name)
     plt.tight_layout()
     plt.savefig(SOURCE_DIR + "/results/" + folder_name + "/distance-vs-omega0.pdf")
 
@@ -116,7 +130,7 @@ for folder_name in genes_list:
     plt.plot(np.linspace(min(omegaA), max(omegaA), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
     plt.xlabel("OmegaA")
     plt.ylabel("Distance")
-    plt.title("Distance vs omegaA (omega - omega0)")
+    plt.title("Distance as a function of omegaA (omega - omega0) for gene " + name)
     plt.tight_layout()
     plt.savefig(SOURCE_DIR + "/results/" + folder_name + "/distance-vs-omegaA.pdf")
 
@@ -131,7 +145,7 @@ plt.fill_between(x=np.linspace(min(all_omega), max(all_omega), 100), y1=lower_ci
 plt.plot(np.linspace(min(all_omega), max(all_omega), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
 plt.xlabel("Omega")
 plt.ylabel("Distance")
-plt.title("Distance vs omega")
+plt.title("Distance as a function of omega")
 plt.tight_layout()
 plt.savefig(SOURCE_DIR + "/results/allgenes-distance-vs-omega.pdf")
 
@@ -143,7 +157,7 @@ plt.fill_between(x=np.linspace(min(all_omega0), max(all_omega0), 100), y1=lower_
 plt.plot(np.linspace(min(all_omega0), max(all_omega0), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
 plt.xlabel("Omega 0")
 plt.ylabel("Distance")
-plt.title("Distance vs omega 0")
+plt.title("Distance as a function of omega 0")
 plt.tight_layout()
 plt.savefig(SOURCE_DIR + "/results/allgenes-distance-vs-omega0.pdf")
 
@@ -155,6 +169,21 @@ plt.fill_between(x=np.linspace(min(all_omegaA), max(all_omegaA), 100), y1=lower_
 plt.plot(np.linspace(min(all_omegaA), max(all_omegaA), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
 plt.xlabel("OmegaA")
 plt.ylabel("Distance")
-plt.title("Distance vs omegaA (omega - omega0)")
+plt.title("Distance as a function of omegaA (omega - omega0)")
 plt.tight_layout()
 plt.savefig(SOURCE_DIR + "/results/allgenes-distance-vs-omegaA.pdf")
+
+# Plot omegaA vs distance per gene and save it
+yfit, lower_ci, upper_ci = linearfit(omegaA_per_gene, distance_per_gene, np.linspace(min(omegaA_per_gene), max(omegaA_per_gene), 100))
+plt.figure(figsize=(7, 7))
+for i, txt in enumerate(all_names):
+    plt.annotate(txt, (omegaA_per_gene[i] + 0.0005, distance_per_gene[i] + 0.0005), fontsize=8)
+plt.scatter(omegaA_per_gene, distance_per_gene, s=5)
+plt.fill_between(x=np.linspace(min(omegaA_per_gene), max(omegaA_per_gene), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
+plt.plot(np.linspace(min(omegaA_per_gene), max(omegaA_per_gene), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
+plt.xlabel("Average omegaA")
+plt.ylabel("Average distance")
+plt.rcParams["axes.titlesize"] = 10
+plt.title("Average distance as a function of average omegaA (omega - omega0), per gene")
+plt.tight_layout()
+plt.savefig(SOURCE_DIR + "/results/pergene-distance-vs-omegaA.pdf")
