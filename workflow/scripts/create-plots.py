@@ -46,6 +46,10 @@ omegaA_per_gene = []
 distance_per_gene = []
 all_names = []
 
+# Initialize colors
+fill_reg = [0, 0, 0, 0.1]
+lin_reg = [0, 0, 0, 1]
+
 # Iterate over the contents of SOURCE_DIR and process folders
 for folder_name in genes_list:
     # For every folder
@@ -103,8 +107,8 @@ for folder_name in genes_list:
     yfit, lower_ci, upper_ci = linearfit(omega, distance.iloc[:, 1].tolist(), np.linspace(min(omega), max(omega), 100))
     plt.figure(figsize=(7, 7))
     plt.scatter(omega, distance.iloc[:, 1], s=2)
-    plt.fill_between(x=np.linspace(min(omega), max(omega), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
-    plt.plot(np.linspace(min(omega), max(omega), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
+    plt.fill_between(x=np.linspace(min(omega), max(omega), 100), y1=lower_ci, y2=upper_ci, color=fill_reg, edgecolor=None)
+    plt.plot(np.linspace(min(omega), max(omega), 100), yfit, linewidth=1, color=lin_reg)
     plt.xlabel("Omega")
     plt.ylabel("Distance")
     plt.title("Distance as a function of omega for gene " + name)
@@ -115,8 +119,8 @@ for folder_name in genes_list:
     yfit, lower_ci, upper_ci = linearfit(omega0, distance.iloc[:, 1].tolist(), np.linspace(min(omega0), max(omega0), 100))
     plt.figure(figsize=(7, 7))
     plt.scatter(omega0, distance.iloc[:, 1], s=2)
-    plt.fill_between(x=np.linspace(min(omega0), max(omega0), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
-    plt.plot(np.linspace(min(omega0), max(omega0), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
+    plt.fill_between(x=np.linspace(min(omega0), max(omega0), 100), y1=lower_ci, y2=upper_ci, color=fill_reg, edgecolor=None)
+    plt.plot(np.linspace(min(omega0), max(omega0), 100), yfit, linewidth=1, color=lin_reg)
     plt.xlabel("Omega 0")
     plt.ylabel("Distance")
     plt.title("Distance as a function of omega0 for gene " + name)
@@ -127,8 +131,8 @@ for folder_name in genes_list:
     yfit, lower_ci, upper_ci = linearfit(omegaA, distance.iloc[:, 1].tolist(), np.linspace(min(omegaA), max(omegaA), 100))
     plt.figure(figsize=(7, 7))
     plt.scatter(omegaA, distance.iloc[:, 1], s=2)
-    plt.fill_between(x=np.linspace(min(omegaA), max(omegaA), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
-    plt.plot(np.linspace(min(omegaA), max(omegaA), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
+    plt.fill_between(x=np.linspace(min(omegaA), max(omegaA), 100), y1=lower_ci, y2=upper_ci, color=fill_reg, edgecolor=None)
+    plt.plot(np.linspace(min(omegaA), max(omegaA), 100), yfit, linewidth=1, color=lin_reg)
     plt.xlabel("OmegaA")
     plt.ylabel("Distance")
     plt.title("Distance as a function of omegaA (omega - omega0) for gene " + name)
@@ -142,8 +146,8 @@ all_omegaA = [all_omega[i] - all_omega0[i] for i in range(len(all_omega))]
 yfit, lower_ci, upper_ci = linearfit(all_omega, all_distance, np.linspace(min(all_omega), max(all_omega), 100))
 plt.figure(figsize=(7, 7))
 plt.scatter(all_omega, all_distance, s=2)
-plt.fill_between(x=np.linspace(min(all_omega), max(all_omega), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
-plt.plot(np.linspace(min(all_omega), max(all_omega), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
+plt.fill_between(x=np.linspace(min(all_omega), max(all_omega), 100), y1=lower_ci, y2=upper_ci, color=fill_reg, edgecolor=None)
+plt.plot(np.linspace(min(all_omega), max(all_omega), 100), yfit, linewidth=1, color=lin_reg)
 plt.xlabel("Omega")
 plt.ylabel("Distance")
 plt.title("Distance as a function of omega")
@@ -154,8 +158,8 @@ plt.savefig(SOURCE_DIR + "/results/allgenes-distance-vs-omega.pdf")
 yfit, lower_ci, upper_ci = linearfit(all_omega0, all_distance, np.linspace(min(all_omega0), max(all_omega0), 100))
 plt.figure(figsize=(7, 7))
 plt.scatter(all_omega0, all_distance, s=2)
-plt.fill_between(x=np.linspace(min(all_omega0), max(all_omega0), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
-plt.plot(np.linspace(min(all_omega0), max(all_omega0), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
+plt.fill_between(x=np.linspace(min(all_omega0), max(all_omega0), 100), y1=lower_ci, y2=upper_ci, color=fill_reg, edgecolor=None)
+plt.plot(np.linspace(min(all_omega0), max(all_omega0), 100), yfit, linewidth=1, color=lin_reg)
 plt.xlabel("Omega 0")
 plt.ylabel("Distance")
 plt.title("Distance as a function of omega 0")
@@ -166,8 +170,8 @@ plt.savefig(SOURCE_DIR + "/results/allgenes-distance-vs-omega0.pdf")
 yfit, lower_ci, upper_ci = linearfit(all_omegaA, all_distance, np.linspace(min(all_omegaA), max(all_omegaA), 100))
 plt.figure(figsize=(7, 7))
 plt.scatter(all_omegaA, all_distance, s=2)
-plt.fill_between(x=np.linspace(min(all_omegaA), max(all_omegaA), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
-plt.plot(np.linspace(min(all_omegaA), max(all_omegaA), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
+plt.fill_between(x=np.linspace(min(all_omegaA), max(all_omegaA), 100), y1=lower_ci, y2=upper_ci, color=fill_reg, edgecolor=None)
+plt.plot(np.linspace(min(all_omegaA), max(all_omegaA), 100), yfit, linewidth=1, color=lin_reg)
 plt.xlabel("OmegaA")
 plt.ylabel("Distance")
 plt.title("Distance as a function of omegaA (omega - omega0)")
@@ -180,8 +184,8 @@ plt.figure(figsize=(7, 7))
 for i, txt in enumerate(all_names):
     plt.annotate(txt, (omegaA_per_gene[i] + 0.0005, distance_per_gene[i] + 0.0005), fontsize=8)
 plt.scatter(omegaA_per_gene, distance_per_gene, s=5)
-plt.fill_between(x=np.linspace(min(omegaA_per_gene), max(omegaA_per_gene), 100), y1=lower_ci, y2=upper_ci, color=[1, 0, 0, 0.15], edgecolor=None)
-plt.plot(np.linspace(min(omegaA_per_gene), max(omegaA_per_gene), 100), yfit, linewidth=1, color=[1, 0, 0, .8])
+plt.fill_between(x=np.linspace(min(omegaA_per_gene), max(omegaA_per_gene), 100), y1=lower_ci, y2=upper_ci, color=fill_reg, edgecolor=None)
+plt.plot(np.linspace(min(omegaA_per_gene), max(omegaA_per_gene), 100), yfit, linewidth=1, color=lin_reg)
 plt.xlabel("Average omegaA")
 plt.ylabel("Average distance")
 plt.rcParams["axes.titlesize"] = 10
