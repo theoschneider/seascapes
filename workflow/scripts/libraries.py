@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats as stats
 import statsmodels.api as sm
+import matplotlib.pyplot as plt
 
 # Define the codon table
 codontable = defaultdict(lambda: "-")
@@ -184,3 +185,15 @@ def linearfit(x, y, x_new, alpha=0.05):
     upper_ci = yfit + margin_of_error
 
     return yfit, lower_ci, upper_ci
+
+
+def set_size(w, h, ax=None):
+    """ w, h: width, height in inches """
+    if not ax: ax=plt.gca()
+    l = ax.figure.subplotpars.left
+    r = ax.figure.subplotpars.right
+    t = ax.figure.subplotpars.top
+    b = ax.figure.subplotpars.bottom
+    figw = float(w)/(r-l)
+    figh = float(h)/(t-b)
+    ax.figure.set_size_inches(figw, figh)
