@@ -50,7 +50,7 @@ localrules: all,subset
 rule all:
     input:
         expand("processed/{CDS}/distance.tsv", CDS=CDS_list),
-        expand("processed/{CDS}/{clade}.Whole.{model}.ci0.025.tsv", CDS=CDS_list, model=["omega", "omega_0"], clade=[config['clade']])
+        expand("processed/{CDS}/{clade}.Whole.{model}.ci0.025.tsv", CDS=CDS_list, model=["omega", "omega_0"], clade=[config['clade']]),
 
 rule subset:
     input:
@@ -70,7 +70,7 @@ rule run_mutsel:
         phy = "processed/{CDS}/{clade}.{subset}.phy",
         tree = "processed/{CDS}/{clade}.{subset}.rootree"
     output:
-        "processed/{CDS}/{clade}.{subset}.chain"
+        "processed/{CDS}/{clade}.{subset}.run"
     params:
         time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"]
@@ -80,7 +80,7 @@ rule run_mutsel:
 rule read_mutsel:
     input:
         bin = bayescode_path['readmutselomega'],
-        chain = "processed/{CDS}/{clade}.{subset}.chain"
+        chain = "processed/{CDS}/{clade}.{subset}.run"
     params:
         time="0-10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"],
@@ -88,7 +88,10 @@ rule read_mutsel:
     output:
         "processed/{CDS}/{clade}.{subset}.siteprofiles"
     shell:
-        "{input.bin} --every 1 -u {params.until} --burnin {params.burnin} --ss {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}"
+        "if test -f {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}.chain.gz; \
+        then gunzip {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}.chain.gz; fi; \
+        {input.bin} --every 1 -u {params.until} --burnin {params.burnin} --ss {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset} ; \
+        gzip {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}.chain"
 
 rule run_omega_0:
     input:
@@ -96,7 +99,7 @@ rule run_omega_0:
         phy = "processed/{CDS}/{clade}.Whole.phy",
         tree = "processed/{CDS}/{clade}.Whole.rootree"
     output:
-        "processed/{CDS}/{clade}.Whole.omega_0.chain"
+        "processed/{CDS}/{clade}.Whole.omega_0.run"
     params:
         time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"]
@@ -109,7 +112,7 @@ rule run_omega:
         phy = "processed/{CDS}/{clade}.Whole.phy",
         tree = "processed/{CDS}/{clade}.Whole.rootree"
     output:
-        "processed/{CDS}/{clade}.Whole.omega.chain"
+        "processed/{CDS}/{clade}.Whole.omega.run"
     params:
         time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"]
@@ -119,7 +122,7 @@ rule run_omega:
 rule read_omega:
     input:
         bin = bayescode_path['readmutselomega'],
-        chain = "processed/{CDS}/{clade}.Whole.{model}.chain"
+        chain = "processed/{CDS}/{clade}.Whole.{model}.run"
     params:
         time="0-10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"],
@@ -127,7 +130,10 @@ rule read_omega:
     output:
         "processed/{CDS}/{clade}.Whole.{model}.ci0.025.tsv"
     shell:
-        "{input.bin} --every 1 -u {params.until} --burnin {params.burnin} --confidence_interval 0.025 --{wildcards.model} {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model}"
+        "if test -f {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model}.chain.gz; \
+        then gunzip {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model}.chain.gz; fi; \
+        {input.bin} --every 1 -u {params.until} --burnin {params.burnin} --confidence_interval 0.025 --{wildcards.model} {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model} ; \
+        gzip {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model}.chain"
 
 rule distance:
     input:
