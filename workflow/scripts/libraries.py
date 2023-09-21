@@ -109,6 +109,17 @@ def filter_fasta(dic_fasta1, dic_fasta2):
     return filt_dic1, filt_dic2
 
 
+def open_ali(path):
+    file = open(path, "r")
+    lines = file.readlines()
+    out_dic = {}
+
+    for line in lines[1:]:
+        out_dic[line.split(" ")[0]] = line.split(" ")[1]
+
+    return out_dic
+
+
 def write_ali(dico_fasta, output):
     outfile = gzip.open(output, 'wt') if output.endswith(".gz") else open(output, 'w')
     # Assert that all sequences have the same length
@@ -166,9 +177,12 @@ def js(dataframe1: pd.DataFrame, dataframe2: pd.DataFrame) -> pd.DataFrame:
 
 
 def linearfit(x, y, x_new, alpha=0.05):
+
+    # Train the model
     x_with_const = sm.add_constant(x)
     model = sm.OLS(y, x_with_const).fit()
 
+    # Predict using x_new
     x_new_with_const = sm.add_constant(x_new)
     yfit = model.predict(x_new_with_const)
     residuals = y - model.predict(x_with_const)
@@ -185,6 +199,30 @@ def linearfit(x, y, x_new, alpha=0.05):
     upper_ci = yfit + margin_of_error
 
     return yfit, lower_ci, upper_ci
+
+
+def getconfint(x, y, alpha=0.05):
+
+    # Train the model
+    x_with_const = sm.add_constant(x)
+    model = sm.OLS(y, x_with_const).fit()
+
+    # Predict using x
+    yfit = model.predict(x_with_const)
+    residuals = y - yfit
+
+    # Get dof, t and se
+    dof = len(x) - model.df_model - 1
+    t_critical = stats.t.ppf(1 - alpha / 2, df=dof)
+    se_residuals = np.sqrt(np.sum(residuals ** 2) / dof)
+
+    # Predict se and get confidence interval
+    se_predictions = se_residuals * np.sqrt(1 / len(x) + (x - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
+    margin_of_error = t_critical * se_predictions
+    lower_ci = yfit - margin_of_error
+    upper_ci = yfit + margin_of_error
+
+    return lower_ci, upper_ci
 
 
 def set_size(w, h, ax=None):
