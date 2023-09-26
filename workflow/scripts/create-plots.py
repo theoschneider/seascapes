@@ -14,16 +14,22 @@ ALL = True
 GENES = []
 CLADE = "Euarchontoglires"
 
+# Get the list of all genes, remove DS_Store if present
+all_genes = os.listdir(os.path.join(SOURCE_DIR, "processed"))
+if ".DS_Store" in all_genes:
+    all_genes.remove(".DS_Store")
+
 # Check if ALL is true, then adjust FROM and TO to process all folders
 if ALL:
     FROM = 1
-    TO = len(os.listdir(os.path.join(SOURCE_DIR, "processed")))
+    TO = len(all_genes)
 
 # Check if some genes have been specified
 if GENES:
     genes_list = GENES
 else:
-    genes_list = os.listdir(os.path.join(SOURCE_DIR, "processed"))[FROM:TO + 1]
+    genes_list = all_genes[FROM:TO + 1]
+
 
 # Initialize empty dataframes for all genes
 all_omega = []
@@ -102,6 +108,8 @@ for folder_name in genes_list:
     plt.xlabel("Omega")
     plt.ylabel("Distance")
     plt.title("Distance as a function of omega for gene " + name)
+    plt.xscale("log")
+    plt.yscale("log")
     plt.tight_layout()
     plt.savefig(SOURCE_DIR + "/results/" + folder_name + "/distance-vs-omega.pdf")
 
@@ -114,6 +122,8 @@ for folder_name in genes_list:
     plt.xlabel("Omega0")
     plt.ylabel("Distance")
     plt.title("Distance as a function of omega0 for gene " + name)
+    plt.xscale("log")
+    plt.yscale("log")
     plt.tight_layout()
     plt.savefig(SOURCE_DIR + "/results/" + folder_name + "/distance-vs-omega0.pdf")
 
@@ -126,6 +136,7 @@ for folder_name in genes_list:
     plt.xlabel("OmegaA")
     plt.ylabel("Distance")
     plt.title("Distance as a function of omegaA (omega - omega0) for gene " + name)
+    plt.yscale("log")
     plt.tight_layout()
     plt.savefig(SOURCE_DIR + "/results/" + folder_name + "/distance-vs-omegaA.pdf")
 
@@ -141,6 +152,8 @@ plt.plot(np.linspace(min(all_omega), max(all_omega), 100), yfit, linewidth=2, co
 plt.xlabel("Omega")
 plt.ylabel("Distance")
 plt.title("Distance as a function of omega")
+plt.xscale("log")
+plt.yscale("log")
 plt.tight_layout()
 plt.savefig(SOURCE_DIR + "/results/allgenes-distance-vs-omega.pdf")
 
@@ -153,6 +166,8 @@ plt.plot(np.linspace(min(all_omega0), max(all_omega0), 100), yfit, linewidth=2, 
 plt.xlabel("Omega0")
 plt.ylabel("Distance")
 plt.title("Distance as a function of omega 0")
+plt.xscale("log")
+plt.yscale("log")
 plt.tight_layout()
 plt.savefig(SOURCE_DIR + "/results/allgenes-distance-vs-omega0.pdf")
 
@@ -165,6 +180,7 @@ plt.plot(np.linspace(min(all_omegaA), max(all_omegaA), 100), yfit, linewidth=2, 
 plt.xlabel("OmegaA")
 plt.ylabel("Distance")
 plt.title("Distance as a function of omegaA (omega - omega0)")
+plt.yscale("log")
 plt.tight_layout()
 plt.savefig(SOURCE_DIR + "/results/allgenes-distance-vs-omegaA.pdf")
 
