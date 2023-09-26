@@ -25,10 +25,38 @@ codontable.update({
 
 
 # All possible codons except stop codons
-# codons = [a1 + a2 + a3 for a1 in "ATGC" for a2 in "ATGC" for a3 in "ATGC"]
 codons = [c for c in codontable.keys() if c not in {"TAA", "TAG", "TGA"}]
 
 Q = pd.DataFrame(np.zeros((len(codons), len(codons))), index=codons, columns=codons)
 
-print(Q)
+R = pd.DataFrame(np.zeros((4, 4)), index=["A", "C", "G", "T"], columns=["A", "C", "G", "T"])
+
+with open("/Users/theo/THÉO/seascapes/data/Experiments/ENSG00000000003_TSPAN6_NT/sitemutsel_1.run.nucmatrix.tsv") as f:
+    R_file = f.readlines()
+
+for line in R_file[1:]:
+    line = line.strip().split("\t")
+    R.loc[line[0].split("_")[1], line[0].split("_")[2]] = float(line[1])
+
+# Diagonal: 1 - sum of other elements
+for i in range(4):
+    R.iloc[i, i] = 0 - R.iloc[i, :].sum()
+
+print(R)
+
+# Determine sigma (vector) by this relation: sigma x R = 0 (null vector)
+sigma = np.linalg.solve(R, np.zeros(4))
+print(sigma)
+print(np.dot(sigma, R))
+
+
+
+
+
+
+
+
+
+
+
 
