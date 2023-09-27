@@ -29,34 +29,36 @@ codons = [c for c in codontable.keys() if c not in {"TAA", "TAG", "TGA"}]
 
 Q = pd.DataFrame(np.zeros((len(codons), len(codons))), index=codons, columns=codons)
 
-R = pd.DataFrame(np.zeros((4, 4)), index=["A", "C", "G", "T"], columns=["A", "C", "G", "T"])
 
-with open("/Users/theo/THÉO/seascapes/data/Experiments/ENSG00000000003_TSPAN6_NT/sitemutsel_1.run.nucmatrix.tsv") as f:
-    R_file = f.readlines()
+def get_R(filepath):
+    R = pd.DataFrame(np.zeros((4, 4)), index=["A", "C", "G", "T"], columns=["A", "C", "G", "T"])
 
-for line in R_file[1:]:
-    line = line.strip().split("\t")
-    R.loc[line[0].split("_")[1], line[0].split("_")[2]] = float(line[1])
+    with open(filepath) as f:
+        R_file = f.readlines()
 
-# Diagonal: 1 - sum of other elements
-for i in range(4):
-    R.iloc[i, i] = 0 - R.iloc[i, :].sum()
+    for line in R_file[1:]:
+        line = line.strip().split("\t")
+        R.loc[line[0].split("_")[1], line[0].split("_")[2]] = float(line[1])
 
-print(R)
+    # Diagonal: 1 - sum of other elements
+    for i in range(4):
+        R.iloc[i, i] = 0 - R.iloc[i, :].sum()
+
+    return R
+
 
 # Determine sigma (vector) by this relation: sigma x R = 0 (null vector)
-sigma = np.linalg.solve(R, np.zeros(4))
+def obtain_steady_state(R_matrix):
+    dimension = R_matrix.shape[0]
+    M = np.vstack((R_matrix.transpose()[:-1], np.ones(dimension)))
+    b = np.vstack((np.zeros((dimension - 1, 1)), [1]))
+    return np.linalg.solve(M, b).transpose()[0]
+
+
+R = get_R("/Users/theo/THÉO/seascapes/data/Experiments/ENSG00000000003_TSPAN6_NT/sitemutsel_1.run.nucmatrix.tsv")
+sigma = obtain_steady_state(R)
+
+print(R)
 print(sigma)
 print(np.dot(sigma, R))
-
-
-
-
-
-
-
-
-
-
-
 
