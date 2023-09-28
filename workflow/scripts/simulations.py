@@ -23,6 +23,9 @@ codontable.update({
     'TAC': 'Y', 'TAT': 'Y', 'TAA': 'X', 'TAG': 'X',
     'TGC': 'C', 'TGT': 'C', 'TGA': 'X', 'TGG': 'W'})
 
+# All possible codons except stop codons
+codons = [c for c in codontable.keys() if c not in {"TAA", "TAG", "TGA"}]
+
 
 def get_R(filepath):
     R = pd.DataFrame(np.zeros((4, 4)), index=["A", "C", "G", "T"], columns=["A", "C", "G", "T"])
@@ -41,12 +44,15 @@ def get_R(filepath):
     return R
 
 
-# Determine sigma (vector) by this relation: sigma x R = 0 (null vector)
+# Determine sigma (vector) by this relation: sigma x R = 0 (null vector), using linear algebra
 def get_steady_state(R_matrix):
     dimension = R_matrix.shape[0]
     M = np.vstack((R_matrix.transpose()[:-1], np.ones(dimension)))
     b = np.vstack((np.zeros((dimension - 1, 1)), [1]))
-    return np.linalg.solve(M, b).transpose()[0]
+    solution = np.linalg.solve(M, b).transpose()[0]
+    # Save solution in a dictionary where keys are the matrix column names
+    sigma_dict = {R_matrix.columns[i]: solution[i] for i in range(dimension)}
+    return sigma_dict
 
 
 def get_fitness(folderpath):
@@ -63,20 +69,7 @@ def get_fitness(folderpath):
     return fitness
 
 
-R = get_R("/Users/theo/THÉO/seascapes/data/Experiments/ENSG00000000003_TSPAN6_NT/sitemutsel_1.run.nucmatrix.tsv")
-sigma = get_steady_state(R)
-fitness = get_fitness("/Users/theo/THÉO/seascapes/processed/ENSG00000006715_VPS41")
-
-print(R)
-print(sigma)
-print(fitness)
-
-
-
-
 def get_Q(R, f):
-    # All possible codons except stop codons
-    codons = [c for c in codontable.keys() if c not in {"TAA", "TAG", "TGA"}]
 
     Q = pd.DataFrame(np.zeros((len(codons), len(codons))), index=codons, columns=codons)
 
@@ -97,12 +90,30 @@ def get_Q(R, f):
     return Q
 
 
-Q = get_Q(R, fitness)
-
-
 def get_pi(sigma, f):
-    return None
+    pi = {}
+    denom = sum([sigma[c[0]] * sigma[c[1]] * sigma[c[2]] * f[codontable[c]] for c in codons])
+
+    for codon in codons:
+        pi[codon] = (sigma[codon[0]] * sigma[codon[1]] * sigma[codon[2]] * np.exp(f[codontable[codon]])) / denom
+
+    return pi
 
 
+R = get_R("/Users/theo/THÉO/seascapes/data/Experiments/ENSG00000000003_TSPAN6_NT/sitemutsel_1.run.nucmatrix.tsv")
+sigma = get_steady_state(R)
+fitness = get_fitness("/Users/theo/THÉO/seascapes/processed/ENSG00000006715_VPS41")
+Q = get_Q(R, fitness)
+pi = get_pi(sigma, fitness)
+
+
+print(R)
+print(sigma)
+print(np.dot(np.array(list(sigma.values())), R))
+
+print(fitness)
 print(Q)
+print(pi)
+
+print(np.dot(np.array(list(pi.values())), Q))
 
