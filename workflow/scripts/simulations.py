@@ -39,7 +39,7 @@ def get_R(filepath):
 
     # Diagonal: 1 - sum of other elements
     for i in range(4):
-        R.iloc[i, i] = 0 - R.iloc[i, :].sum()
+        R.iloc[i, i] = -R.iloc[i, :].sum()
 
     return R
 
@@ -55,16 +55,11 @@ def get_steady_state(R_matrix):
     return sigma_dict
 
 
-def get_fitness(folderpath):
-    df1 = pd.read_csv(f"{folderpath}/Euarchontoglires.Exclude.siteprofiles", sep="\t", header=0, index_col=None)
-    df2 = pd.read_csv(f"{folderpath}/Euarchontoglires.Include.siteprofiles", sep="\t", header=0, index_col=None)
+def get_fitness(filepath):
+    df = pd.read_csv(filepath, sep="\t", header=0, index_col=None)
 
-    # concatenate both files (keep column names)
-    df = pd.concat([df1, df2], axis=0, ignore_index=True)
-    df = df.iloc[:, 1:]
-
-    # Take the col means, stored in a dictionary where key is the column name
-    fitness = {aa: df[aa].mean() for aa in df.columns}
+    # Take the first row of the df, save it in a dictionary where key is col name
+    fitness = {aa: np.log(df[aa][0]) for aa in df.columns[1:]}
 
     return fitness
 
@@ -79,30 +74,46 @@ def get_Q(R, f):
             diff = [a+b for a, b in zip(i, j) if a != b]
 
             if len(diff) == 0 or len(diff) > 1:
-                Q.loc[i, j] = 0
+                continue
 
-            elif codontable[i] == codontable[j]:
+            Ai = codontable[i]
+            Aj = codontable[j]
+
+            if Ai == Aj:
                 Q.loc[i, j] = R.loc[diff[0][0], diff[0][1]]
 
             else:
-                Q.loc[i, j] = R.loc[diff[0][0], diff[0][1]] * ((f[codontable[j]] - f[codontable[i]]) / (1 - np.exp(f[codontable[i]] - f[codontable[j]])))
+                s = f[Aj] - f[Ai]
+
+                if abs(s) < 1e-6:
+                    pfix = 1 + s / 2
+                else:
+                    pfix = s / (1 - np.exp(-s))
+
+                Q.loc[i, j] = R.loc[diff[0][0], diff[0][1]] * pfix
+
+    # Diagonal: 1 - sum of other elements
+    for i in range(len(codons)):
+        Q.iloc[i, i] = -Q.iloc[i, :].sum()
 
     return Q
 
 
 def get_pi(sigma, f):
     pi = {}
-    denom = sum([sigma[c[0]] * sigma[c[1]] * sigma[c[2]] * f[codontable[c]] for c in codons])
 
     for codon in codons:
-        pi[codon] = (sigma[codon[0]] * sigma[codon[1]] * sigma[codon[2]] * np.exp(f[codontable[codon]])) / denom
+        pi[codon] = (sigma[codon[0]] * sigma[codon[1]] * sigma[codon[2]] * np.exp(f[codontable[codon]]))
+
+    denom = sum(pi.values())
+    pi = {k: v / denom for k, v in pi.items()}
 
     return pi
 
 
 R = get_R("/Users/theo/THÉO/seascapes/data/Experiments/ENSG00000000003_TSPAN6_NT/sitemutsel_1.run.nucmatrix.tsv")
 sigma = get_steady_state(R)
-fitness = get_fitness("/Users/theo/THÉO/seascapes/processed/ENSG00000006715_VPS41")
+fitness = get_fitness("/Users/theo/THÉO/seascapes/processed/ENSG00000006715_VPS41/Euarchontoglires.Exclude.siteprofiles")
 Q = get_Q(R, fitness)
 pi = get_pi(sigma, fitness)
 
@@ -112,8 +123,8 @@ print(sigma)
 print(np.dot(np.array(list(sigma.values())), R))
 
 print(fitness)
+
 print(Q)
 print(pi)
-
 print(np.dot(np.array(list(pi.values())), Q))
 
