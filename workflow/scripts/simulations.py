@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 
 # Define the codon table
@@ -120,11 +120,40 @@ pi = get_pi(sigma, fitness)
 
 print(R)
 print(sigma)
-print(np.dot(np.array(list(sigma.values())), R))
 
 print(fitness)
 
 print(Q)
 print(pi)
-print(np.dot(np.array(list(pi.values())), Q))
 
+
+def run_simulation(Q, max_time=10000, seed=None):
+
+    if seed is not None:
+        np.random.seed(seed)
+
+    dimension = Q.shape[0]
+    state, clock = 0, 0
+    history = defaultdict(lambda: 0)
+
+    while clock < max_time:
+
+        row = Q.iloc[state, :]
+        potential_states = np.where(row > 0)
+        potential_states = potential_states[0]
+        rates = row[potential_states]
+        samples = np.random.exponential(1 / rates)
+        time = np.min(samples)
+        clock += time
+
+        history[state] += time
+
+        state = potential_states[np.argmin(samples)]
+
+    return Counter(history)
+
+
+simulation = run_simulation(Q, seed=42)
+
+
+print(simulation)
