@@ -118,42 +118,54 @@ Q = get_Q(R, fitness)
 pi = get_pi(sigma, fitness)
 
 
-print(R)
-print(sigma)
+# print(R)
+# print(sigma)
 
-print(fitness)
+# print(fitness)
 
-print(Q)
-print(pi)
+# print(Q)
+# print(pi)
 
-
-def run_simulation(Q, max_time=10000, seed=None):
+def run_simulation(Q, initial_state, max_time=10000, seed=None):
 
     if seed is not None:
         np.random.seed(seed)
 
     dimension = Q.shape[0]
-    state, clock = 0, 0
+    clock = 0
     history = defaultdict(lambda: 0)
+    state = initial_state
+
+    codon_list = [Q.columns[state]]
+    time_list = []
 
     while clock < max_time:
 
         row = Q.iloc[state, :]
-        potential_states = np.where(row > 0)
-        potential_states = potential_states[0]
+        potential_states = np.where(row > 0)[0]
         rates = row[potential_states]
         samples = np.random.exponential(1 / rates)
         time = np.min(samples)
+        time_list.append(clock)
         clock += time
 
         history[state] += time
 
         state = potential_states[np.argmin(samples)]
+        codon_list.append(Q.columns[state])
 
-    return Counter(history)
+        # assert difference is only 1 mutation
+        assert len([a+b for a, b in zip(codon_list[-1], codon_list[-2]) if a != b]) == 1, "More than 1 mutation"
+
+    assert time_list[-1] < max_time, "Clock exceeded max_time"
+
+    return codon_list, time_list, state
 
 
-simulation = run_simulation(Q, seed=42)
+initial_state = np.random.choice(range(len(codons)), p=list(pi.values()))
+
+codon_list, time_list, state = run_simulation(Q, initial_state, seed=42)
+
+print(codon_list, state)
 
 
-print(simulation)
