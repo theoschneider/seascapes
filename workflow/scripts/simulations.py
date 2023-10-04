@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-from collections import defaultdict, Counter
+from collections import defaultdict
+from ete3 import Tree
 
 
 # Define the codon table
@@ -111,21 +112,6 @@ def get_pi(sigma, f):
     return pi
 
 
-R = get_R("/Users/theo/THÉO/seascapes/data/Experiments/ENSG00000000003_TSPAN6_NT/sitemutsel_1.run.nucmatrix.tsv")
-sigma = get_steady_state(R)
-fitness = get_fitness("/Users/theo/THÉO/seascapes/processed/ENSG00000006715_VPS41/Euarchontoglires.Exclude.siteprofiles")
-Q = get_Q(R, fitness)
-pi = get_pi(sigma, fitness)
-
-
-# print(R)
-# print(sigma)
-
-# print(fitness)
-
-# print(Q)
-# print(pi)
-
 def run_simulation(Q, initial_state, max_time=10000, seed=None):
 
     if seed is not None:
@@ -157,15 +143,62 @@ def run_simulation(Q, initial_state, max_time=10000, seed=None):
         # assert difference is only 1 mutation
         assert len([a+b for a, b in zip(codon_list[-1], codon_list[-2]) if a != b]) == 1, "More than 1 mutation"
 
-    assert time_list[-1] < max_time, "Clock exceeded max_time"
+    if len(time_list) > 1:
+        assert time_list[-1] < max_time, "Clock exceeded max_time"
 
     return codon_list, time_list, state
 
 
+folder = "/Users/theo/THÉO/seascapes"
+gene = "ENSG00000006715_VPS41"
+
+R = get_R(f"{folder}/data/Experiments/{gene}_NT/sitemutsel_1.run.nucmatrix.tsv")
+sigma = get_steady_state(R)
+fitness = get_fitness(f"{folder}/processed/{gene}/Euarchontoglires.Exclude.siteprofiles")
+Q = get_Q(R, fitness)
+pi = get_pi(sigma, fitness)
+
+tree = Tree(f"{folder}/data/omm_RooTree.v10b_116/{gene}_NT.rootree", format=1)
+tree_depth = sum([node.dist for node in tree.traverse()])
+
+# print(Q.columns[initial_state])
+
 initial_state = np.random.choice(range(len(codons)), p=list(pi.values()))
+codon_list, time_list, state = run_simulation(Q, initial_state, max_time=tree_depth, seed=42)
 
-codon_list, time_list, state = run_simulation(Q, initial_state, seed=42)
+print(codon_list)
+print(time_list)
+print(state)
 
-print(codon_list, state)
 
+def get_seq(tree, fitness, R, seq_length=100):
 
+    R = get_R(R)
+    sigma = get_steady_state(R)
+    fitness = get_fitness(fitness)
+    Q = get_Q(R, fitness)
+    pi = get_pi(sigma, fitness)
+
+    for node in tree.traverse("preorder"):
+        node.add_feature("state", [])
+
+    for i in range(seq_length):
+
+        for node in tree.traverse("preorder"):
+            if node.is_root():
+                initial_state = np.random.choice(range(len(codons)), p=list(pi.values()))
+                node.state.append(initial_state)
+                continue
+
+            initial_state = node.up.state[-1]
+            _, _, state = run_simulation(Q, initial_state, max_time=(node.dist - node.up.dist), seed=42)
+            node.state.append(state)
+
+    for node in tree.traverse("preorder"):
+        if node.is_leaf():
+            print(node.name)
+            print("".join([codons[j] for j in node.state]))
+
+    return("done")
+
+get_seq(tree, f"{folder}/processed/{gene}/Euarchontoglires.Exclude.siteprofiles", f"{folder}/data/Experiments/{gene}_NT/sitemutsel_1.run.nucmatrix.tsv", seq_length=10)

@@ -38,6 +38,7 @@ all_distance = []
 
 # Initialize empty lists for 1 point per gene
 omegaA_per_gene = []
+omega_per_gene = []
 distance_per_gene = []
 all_names = []
 
@@ -68,6 +69,7 @@ for folder_name in genes_list:
 
     # Append omegaA to the omegaA_per_gene list
     omegaA_per_gene.append(omega.iloc[0, 1] - omega0.iloc[0, 1])
+    omega_per_gene.append(omega.iloc[0, 1])
 
     # Keep only the col of interest and convert to lists
     omega = omega.iloc[1:, 1].tolist()
@@ -185,16 +187,16 @@ plt.tight_layout()
 plt.savefig(SOURCE_DIR + "/results/allgenes-distance-vs-omegaA.pdf")
 
 # Plot omegaA vs distance per gene and save it
-yfit, lower_ci, upper_ci = linearfit(omegaA_per_gene, distance_per_gene, np.linspace(min(omegaA_per_gene), max(omegaA_per_gene), 100))
+yfit, lower_ci, upper_ci = linearfit(omega_per_gene, distance_per_gene, np.linspace(min(omega_per_gene), max(omega_per_gene), 100))
 plt.figure(figsize=(7, 7))
 for i, txt in enumerate(all_names):
-    plt.annotate(txt, (omegaA_per_gene[i] + 0.0005, distance_per_gene[i] + 0.0005), fontsize=8)
-plt.scatter(omegaA_per_gene, distance_per_gene, s=5)
-plt.fill_between(x=np.linspace(min(omegaA_per_gene), max(omegaA_per_gene), 100), y1=lower_ci, y2=upper_ci, color=fill_reg, edgecolor=None)
-plt.plot(np.linspace(min(omegaA_per_gene), max(omegaA_per_gene), 100), yfit, linewidth=2, color=lin_reg)
-plt.xlabel("Average omegaA")
+    plt.annotate(txt, (omega_per_gene[i] + 0.0005, distance_per_gene[i] + 0.0005), fontsize=6)
+plt.scatter(omega_per_gene, distance_per_gene, s=5)
+plt.fill_between(x=np.linspace(min(omega_per_gene), max(omega_per_gene), 100), y1=lower_ci, y2=upper_ci, color=fill_reg, edgecolor=None)
+plt.plot(np.linspace(min(omega_per_gene), max(omega_per_gene), 100), yfit, linewidth=2, color=lin_reg)
+plt.xlabel("Average omega")
 plt.ylabel("Average distance")
 plt.rcParams["axes.titlesize"] = 10
-plt.title("Average distance as a function of average omegaA (omega - omega0), per gene")
+plt.title("Average distance as a function of average omega, per gene")
 plt.tight_layout()
-plt.savefig(SOURCE_DIR + "/results/pergene-distance-vs-omegaA.pdf")
+plt.savefig(SOURCE_DIR + "/results/pergene-distance-vs-omega.pdf")
