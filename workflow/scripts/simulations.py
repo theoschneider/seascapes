@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import random
 from collections import defaultdict
 from ete3 import Tree
 
@@ -101,13 +102,12 @@ def get_Q(R, f):
 
 
 def get_pi(sigma, f):
-    pi = {}
+    pi = []
 
     for codon in codons:
-        pi[codon] = (sigma[codon[0]] * sigma[codon[1]] * sigma[codon[2]] * np.exp(f[codontable[codon]]))
+        pi.append(sigma[codon[0]] * sigma[codon[1]] * sigma[codon[2]] * np.exp(f[codontable[codon]]))
 
-    denom = sum(pi.values())
-    pi = {k: v / denom for k, v in pi.items()}
+    pi = pi / np.sum(pi)
 
     return pi
 
@@ -163,15 +163,20 @@ tree_depth = sum([node.dist for node in tree.traverse()])
 
 # print(Q.columns[initial_state])
 
-initial_state = np.random.choice(range(len(codons)), p=list(pi.values()))
-codon_list, time_list, state = run_simulation(Q, initial_state, max_time=tree_depth, seed=42)
-
-print(codon_list)
-print(time_list)
-print(state)
+# print(codon_list)
+# print(time_list)
+# print(state)
 
 
-def get_seq(tree, fitness, R, seq_length=100):
+def get_seq(tree, fitness, R,filename, seq_length=100, seed=None):
+
+    # calculate and print tree total depth
+    tree_depth = sum([node.dist for node in tree.traverse()])
+    print(f"Tree depth: {tree_depth}")
+
+
+    if seed is not None:
+        np.random.seed(seed)
 
     R = get_R(R)
     sigma = get_steady_state(R)
@@ -180,25 +185,33 @@ def get_seq(tree, fitness, R, seq_length=100):
     pi = get_pi(sigma, fitness)
 
     for node in tree.traverse("preorder"):
-        node.add_feature("state", [])
+        node.add_feature("states", [])
 
     for i in range(seq_length):
 
         for node in tree.traverse("preorder"):
             if node.is_root():
-                initial_state = np.random.choice(range(len(codons)), p=list(pi.values()))
-                node.state.append(initial_state)
-                continue
+                state = np.random.choice(range(len(codons)), p=pi)
 
-            initial_state = node.up.state[-1]
-            _, _, state = run_simulation(Q, initial_state, max_time=(node.dist - node.up.dist), seed=42)
-            node.state.append(state)
+            else:
+                initial_state = node.up.states[-1]
+                _, _, state = run_simulation(Q, initial_state, max_time=node.dist)
 
-    for node in tree.traverse("preorder"):
-        if node.is_leaf():
-            print(node.name)
-            print("".join([codons[j] for j in node.state]))
+            node.states.append(state)
+
+    with open(filename, "w") as f:
+        for node in tree.traverse("preorder"):
+            if node.is_leaf():
+                f.write(">" + node.name + "\n")
+                f.write("".join([codons[j] for j in node.states]) + "\n")
 
     return("done")
 
-get_seq(tree, f"{folder}/processed/{gene}/Euarchontoglires.Exclude.siteprofiles", f"{folder}/data/Experiments/{gene}_NT/sitemutsel_1.run.nucmatrix.tsv", seq_length=10)
+
+get_seq(tree,
+        f"{folder}/processed/{gene}/Euarchontoglires.Exclude.siteprofiles",
+        f"{folder}/data/Experiments/{gene}_NT/sitemutsel_1.run.nucmatrix.tsv",
+        filename=f"{folder}/results/sim_seqs.fasta",
+        seq_length=30,
+        seed=42)
+
