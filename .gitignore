@@ -27,3 +27,4 @@ __pycache__
 *.bbl
 *.blg
 .DS_store
+*.fasta
