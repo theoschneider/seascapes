@@ -1,0 +1,144 @@
+import os
+import pandas as pd
+
+
+configfile: 'config/config.yaml'
+
+folder = os.path.abspath('.')
+fasta_folder = "data/omm_NT_fasta.v10c_116"
+tree_folder = "data/omm_RooTree.v10b_116"
+xml_folder = "data/omm_markers"
+
+bayescode_path = {}
+
+for executable in ["mutselomega", "readmutselomega"]:
+    exec_path = os.path.join(folder, f'utils/BayesCode/bin/{executable}')
+    if not os.path.exists(exec_path):
+        # Find executable in the path using whereis. If not found, raise an error.
+        split = os.popen(f'whereis {executable}').read().split()
+        if len(split) > 1:
+            exec_path = split[1].strip()
+        else:
+            raise FileNotFoundError(f'{executable} not found. Please install BayesCode and add it to your path.')
+    bayescode_path[executable] = exec_path
+    print(f"Found {executable} at {exec_path}")
+
+# Filter genes
+genes_summary = pd.read_csv(f"data/{config['clade']}_genes.csv", header=0, index_col=None)
+print(f"Looking at {len(genes_summary)} genes...")
+genes_summary = genes_summary[(genes_summary['s1_length'] >= 1) & (genes_summary['s2_length'] >= 1) &
+                              (genes_summary['s1_species'] >= 20) & (genes_summary['s2_species'] >= 20)]
+
+print(f"Found {len(genes_summary)} genes with a tree length of at least 1 and at least 20 species in each subset...")
+
+if config["all_genes"]:
+    CDS_list = genes_summary['gene'].tolist()
+else:
+    CDS_list = genes_summary['gene'].tolist()[config['CDS_start']:config['CDS_end']]
+
+print(f"Using {len(CDS_list)} genes.")
+
+models = {"sitemutsel": "--ncat 30",
+          "siteomega": "--freeomega --omegancat 30 --flatfitness"}
+
+points = config['points']
+burn_in = config['burn_in']
+
+
+localrules: all,subset
+
+rule all:
+    input:
+        expand("processed/{CDS}/distance.tsv", CDS=CDS_list),
+        expand("processed/{CDS}/{clade}.Whole.{model}.ci0.025.tsv", CDS=CDS_list, model=["omega", "omega_0"], clade=[config['clade']]),
+
+rule subset:
+    input:
+        script = "workflow/scripts/subset.py",
+        fasta = "data/omm_NT_fasta.v10c_116/{CDS}_NT.fasta",
+        tree = "data/omm_RooTree.v10b_116/{CDS}_NT.rootree",
+        species_list = "data/clades/{clade}.tsv"
+    output:
+        expand("processed/{{CDS}}/{{clade}}.{subset}.phy", subset=["Include", "Exclude", "Whole"]),
+        expand("processed/{{CDS}}/{{clade}}.{subset}.rootree", subset=["Include", "Exclude", "Whole"])
+    shell:
+        "python3 {input.script} --fasta {input.fasta} --tree {input.tree} --subset {input.species_list} --outdir {folder}/processed/{wildcards.CDS}/{wildcards.clade}"
+
+rule run_mutsel:
+    input:
+        bin = bayescode_path['mutselomega'],
+        phy = "processed/{CDS}/{clade}.{subset}.phy",
+        tree = "processed/{CDS}/{clade}.{subset}.rootree"
+    output:
+        "processed/{CDS}/{clade}.{subset}.run"
+    params:
+        time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        until=config["points"]
+    shell:
+        "{input.bin} --ncat 30 -a {input.phy} -t {input.tree} -u {params.until} {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}"
+
+rule read_mutsel:
+    input:
+        bin = bayescode_path['readmutselomega'],
+        chain = "processed/{CDS}/{clade}.{subset}.run"
+    params:
+        time="0-10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        until=config["points"],
+        burnin=config["burn_in"]
+    output:
+        "processed/{CDS}/{clade}.{subset}.siteprofiles"
+    shell:
+        "if test -f {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}.chain.gz; \
+        then gunzip {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}.chain.gz; fi; \
+        {input.bin} --every 1 -u {params.until} --burnin {params.burnin} --ss {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset} ; \
+        gzip {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}.chain"
+
+rule run_omega_0:
+    input:
+        bin = bayescode_path['mutselomega'],
+        phy = "processed/{CDS}/{clade}.Whole.phy",
+        tree = "processed/{CDS}/{clade}.Whole.rootree"
+    output:
+        "processed/{CDS}/{clade}.Whole.omega_0.run"
+    params:
+        time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        until=config["points"]
+    shell:
+        "{input.bin} --ncat 30 -a {input.phy} -t {input.tree} -u {params.until} {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.omega_0"
+
+rule run_omega:
+    input:
+        bin = bayescode_path['mutselomega'],
+        phy = "processed/{CDS}/{clade}.Whole.phy",
+        tree = "processed/{CDS}/{clade}.Whole.rootree"
+    output:
+        "processed/{CDS}/{clade}.Whole.omega.run"
+    params:
+        time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        until=config["points"]
+    shell:
+        "{input.bin} --freeomega --omegancat 30 --flatfitness -a {input.phy} -t {input.tree} -u {params.until} {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.omega"
+
+rule read_omega:
+    input:
+        bin = bayescode_path['readmutselomega'],
+        chain = "processed/{CDS}/{clade}.Whole.{model}.run"
+    params:
+        time="0-10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        until=config["points"],
+        burnin=config["burn_in"]
+    output:
+        "processed/{CDS}/{clade}.Whole.{model}.ci0.025.tsv"
+    shell:
+        "if test -f {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model}.chain.gz; \
+        then gunzip {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model}.chain.gz; fi; \
+        {input.bin} --every 1 -u {params.until} --burnin {params.burnin} --confidence_interval 0.025 --{wildcards.model} {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model} ; \
+        gzip {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model}.chain"
+
+rule distance:
+    input:
+        expand("processed/{{CDS}}/{clade}.{subset}.siteprofiles", subset=["Include", "Exclude"], clade=[config['clade']])
+    output:
+        "processed/{CDS}/distance.tsv"
+    shell:
+        "python3 workflow/scripts/simple_distance.py --path1 {input[0]} --path2 {input[1]} --outpath {output}"
