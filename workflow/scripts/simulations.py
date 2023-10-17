@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import random
 from collections import defaultdict
 from ete3 import Tree
 
@@ -29,7 +28,7 @@ codontable.update({
 codons = [c for c in codontable.keys() if c not in {"TAA", "TAG", "TGA"}]
 
 
-def get_R(filepath):
+def get_R(filepath: str) -> pd.DataFrame:
     R = pd.DataFrame(np.zeros((4, 4)), index=["A", "C", "G", "T"], columns=["A", "C", "G", "T"])
 
     with open(filepath) as f:
@@ -47,7 +46,7 @@ def get_R(filepath):
 
 
 # Determine sigma (vector) by this relation: sigma x R = 0 (null vector), using linear algebra
-def get_steady_state(R_matrix):
+def get_steady_state(R_matrix: pd.DataFrame) -> dict:
     dimension = R_matrix.shape[0]
     M = np.vstack((R_matrix.transpose()[:-1], np.ones(dimension)))
     b = np.vstack((np.zeros((dimension - 1, 1)), [1]))
@@ -57,16 +56,7 @@ def get_steady_state(R_matrix):
     return sigma_dict
 
 
-def get_fitness(filepath):
-    df = pd.read_csv(filepath, sep="\t", header=0, index_col=None)
-
-    # Take the first row of the df, save it in a dictionary where key is col name
-    fitness = {aa: np.log(df[aa][0]) for aa in df.columns[1:]}
-
-    return fitness
-
-
-def get_Q(R, f):
+def get_Q(R: pd.DataFrame, f: dict) -> pd.DataFrame:
 
     Q = pd.DataFrame(np.zeros((len(codons), len(codons))), index=codons, columns=codons)
 
@@ -101,7 +91,7 @@ def get_Q(R, f):
     return Q
 
 
-def get_pi(sigma, f):
+def get_pi(sigma: dict, f: dict) -> list:
     pi = []
 
     for codon in codons:
@@ -112,7 +102,7 @@ def get_pi(sigma, f):
     return pi
 
 
-def run_simulation(Q, initial_state, max_time=10000, seed=None):
+def run_simulation(Q: pd.DataFrame, initial_state: int, max_time: int, seed=None):
 
     if seed is not None:
         np.random.seed(seed)
@@ -125,7 +115,7 @@ def run_simulation(Q, initial_state, max_time=10000, seed=None):
     codon_list = [Q.columns[state]]
     time_list = []
 
-    while clock < max_time:
+    while True:
 
         row = Q.iloc[state, :]
         potential_states = np.where(row > 0)[0]
@@ -134,6 +124,9 @@ def run_simulation(Q, initial_state, max_time=10000, seed=None):
         time = np.min(samples)
         time_list.append(clock)
         clock += time
+
+        if clock > max_time:
+            break
 
         history[state] += time
 
@@ -152,52 +145,43 @@ def run_simulation(Q, initial_state, max_time=10000, seed=None):
 folder = "/Users/theo/THÉO/seascapes"
 gene = "ENSG00000006715_VPS41"
 
-R = get_R(f"{folder}/data/Experiments/{gene}_NT/sitemutsel_1.run.nucmatrix.tsv")
-sigma = get_steady_state(R)
-fitness = get_fitness(f"{folder}/processed/{gene}/Euarchontoglires.Exclude.siteprofiles")
-Q = get_Q(R, fitness)
-pi = get_pi(sigma, fitness)
-
 tree = Tree(f"{folder}/data/omm_RooTree.v10b_116/{gene}_NT.rootree", format=1)
 tree_depth = sum([node.dist for node in tree.traverse()])
 
-# print(Q.columns[initial_state])
 
-# print(codon_list)
-# print(time_list)
-# print(state)
-
-
-def get_seq(tree, fitness, R,filename, seq_length=100, seed=None):
+def get_seq(tree: Tree, fitness_path: str, R: str, filename: str, seed=None) -> None:
 
     # calculate and print tree total depth
     tree_depth = sum([node.dist for node in tree.traverse()])
     print(f"Tree depth: {tree_depth}")
-
 
     if seed is not None:
         np.random.seed(seed)
 
     R = get_R(R)
     sigma = get_steady_state(R)
-    fitness = get_fitness(fitness)
-    Q = get_Q(R, fitness)
-    pi = get_pi(sigma, fitness)
+    fitness_df = pd.read_csv(fitness_path, sep="\t", header=0, index_col=None)
+    seq_length = fitness_df.shape[0]
 
     for node in tree.traverse("preorder"):
-        node.add_feature("states", [])
+        node.add_feature("states", [None] * seq_length)
 
     for i in range(seq_length):
+
+        fit_pos = {aa: np.log(fitness_df[aa][i]) for aa in fitness_df.columns[1:]}
+        Q = get_Q(R, fit_pos)
+        pi = get_pi(sigma, fit_pos)
 
         for node in tree.traverse("preorder"):
             if node.is_root():
                 state = np.random.choice(range(len(codons)), p=pi)
 
             else:
-                initial_state = node.up.states[-1]
-                _, _, state = run_simulation(Q, initial_state, max_time=node.dist)
+                initial_state = node.up.states[i]
+                assert initial_state is not None, "initial state is None"
+                codon_list, _, state = run_simulation(Q, initial_state, max_time=node.dist)
 
-            node.states.append(state)
+            node.states[i] = state
 
     with open(filename, "w") as f:
         for node in tree.traverse("preorder"):
@@ -205,13 +189,12 @@ def get_seq(tree, fitness, R,filename, seq_length=100, seed=None):
                 f.write(">" + node.name + "\n")
                 f.write("".join([codons[j] for j in node.states]) + "\n")
 
-    return("done")
+    return None
 
 
-get_seq(tree,
-        f"{folder}/processed/{gene}/Euarchontoglires.Exclude.siteprofiles",
-        f"{folder}/data/Experiments/{gene}_NT/sitemutsel_1.run.nucmatrix.tsv",
+get_seq(tree=tree,
+        fitness_path=f"{folder}/processed/{gene}/Euarchontoglires.Exclude.siteprofiles",
+        R=f"{folder}/data/Experiments/{gene}_NT/sitemutsel_1.run.nucmatrix.tsv",
         filename=f"{folder}/results/sim_seqs.fasta",
-        seq_length=30,
         seed=42)
 
