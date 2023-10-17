@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 
-configfile: 'config/config.yaml'
+configfile: 'config/configSimu.yaml'
 
 folder = os.path.abspath('.')
 fasta_folder = "data/omm_NT_fasta.v10c_116"
