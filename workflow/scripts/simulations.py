@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 from ete3 import Tree
+import argparse
 
 
 # Define the codon table
@@ -142,18 +143,12 @@ def run_simulation(Q: pd.DataFrame, initial_state: int, max_time: int, seed=None
     return codon_list, time_list, state
 
 
-folder = "/Users/theo/THÉO/seascapes"
-gene = "ENSG00000006715_VPS41"
+def get_seq(treepath: str, fitness_path: str, R: str, filename: str, seed=None) -> None:
 
-tree = Tree(f"{folder}/data/omm_RooTree.v10b_116/{gene}_NT.rootree", format=1)
-tree_depth = sum([node.dist for node in tree.traverse()])
-
-
-def get_seq(tree: Tree, fitness_path: str, R: str, filename: str, seed=None) -> None:
+    tree = Tree(treepath, format=1)
 
     # calculate and print tree total depth
     tree_depth = sum([node.dist for node in tree.traverse()])
-    print(f"Tree depth: {tree_depth}")
 
     if seed is not None:
         np.random.seed(seed)
@@ -192,9 +187,37 @@ def get_seq(tree: Tree, fitness_path: str, R: str, filename: str, seed=None) -> 
     return None
 
 
-get_seq(tree=tree,
+"""
+folder = "/Users/theo/THÉO/seascapes"
+gene = "ENSG00000006715_VPS41"
+
+get_seq(treepath=f"{folder}/data/omm_RooTree.v10b_116/{gene}_NT.rootree",
         fitness_path=f"{folder}/processed/{gene}/Euarchontoglires.Exclude.siteprofiles",
         R=f"{folder}/data/Experiments/{gene}_NT/sitemutsel_1.run.nucmatrix.tsv",
         filename=f"{folder}/results/sim_seqs.fasta",
         seed=42)
+"""
 
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument('--tree', required=True, type=str, dest="treepath",
+                        help="Path where the tree is stored, in newick format")
+    parser.add_argument('--siteprofiles', required=True, type=str, dest="fitness_path",
+                        help="Path to the .siteprofiles file, resulting from a previous run of BayesCode")
+    parser.add_argument('--R', required=True, type=str, dest="R",
+                        help="Path to the nucleotide matrix, R")
+    parser.add_argument('--outfile', required=True, type=str, dest="filename",
+                        help="Path to store the output file (DNA sequences in fasta format)")
+    parser.add_argument('--seed', nargs="?", required=False, default=None, type=int, dest="seed",
+                        help="Optional: seed for the random sequence generation")
+
+    args = parser.parse_args()
+
+    get_seq(treepath=args.treepath,
+            fitness_path=args.fitness_path,
+            R=args.R,
+            filename=args.filename,
+            seed=args.seed)
