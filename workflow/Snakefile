@@ -51,6 +51,7 @@ rule all:
     input:
         expand("processed/{CDS}/distance.tsv", CDS=CDS_list),
         expand("processed/{CDS}/{clade}.Whole.{model}.ci0.025.tsv", CDS=CDS_list, model=["omega", "omega_0"], clade=[config['clade']]),
+        expand("processed/{CDS}/{clade}.Whole.{model}.siteprofiles", CDS=CDS_list, model=["omega", "omega_0"], clade=[config['clade']])
 
 rule subset:
     input:
