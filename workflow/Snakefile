@@ -90,9 +90,9 @@ rule read_mutsel:
         "processed/{CDS}/{clade}.{subset}.siteprofiles"
     shell:
         "if test -f {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}.chain.gz; \
-        then gunzip {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}.chain.gz; fi; \
+        then gunzip -f {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}.chain.gz; fi; \
         {input.bin} --every 1 -u {params.until} --burnin {params.burnin} --ss {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset} ; \
-        gzip {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}.chain"
+        gzip -f {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}.chain"
 
 rule run_omega_0:
     input:
@@ -132,10 +132,10 @@ rule read_omega:
         "processed/{CDS}/{clade}.Whole.{model}.ci0.025.tsv"
     shell:
         "if test -f {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model}.chain.gz; \
-        then gunzip {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model}.chain.gz; fi; \
+        then gunzip -f {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model}.chain.gz; fi; \
         {input.bin} --every 1 -u {params.until} --burnin {params.burnin} --confidence_interval 0.025 --{wildcards.model} {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model} ; \
         {input.bin} --every 1 -u {params.until} --burnin {params.burnin} --ss {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model} ; \
-        gzip {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model}.chain"
+        gzip -f {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.{wildcards.model}.chain"
 
 rule distance:
     input:

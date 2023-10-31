@@ -3,6 +3,7 @@ import pandas as pd
 from collections import defaultdict
 from ete3 import Tree
 import argparse
+from libraries import write_ali
 
 
 # Define the codon table
@@ -143,7 +144,7 @@ def run_simulation(Q: pd.DataFrame, initial_state: int, max_time: int, seed=None
     return codon_list, time_list, state
 
 
-def get_seq(treepath: str, fitness_path: str, R: str, filename: str, seed=None) -> None:
+def get_seq(treepath: str, fitness_path: str, R: str, seed=None) -> dict:
 
     tree = Tree(treepath, format=1)
 
@@ -178,13 +179,13 @@ def get_seq(treepath: str, fitness_path: str, R: str, filename: str, seed=None) 
 
             node.states[i] = state
 
-    with open(filename, "w") as f:
-        for node in tree.traverse("preorder"):
-            if node.is_leaf():
-                f.write(">" + node.name + "\n")
-                f.write("".join([codons[j] for j in node.states]) + "\n")
+    out_dic = {}
 
-    return None
+    for node in tree.traverse("preorder"):
+        if node.is_leaf():
+            out_dic[node.name] = "".join([codons[j] for j in node.states])
+
+    return out_dic
 
 
 """
@@ -216,8 +217,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    get_seq(treepath=args.treepath,
-            fitness_path=args.fitness_path,
-            R=args.R,
-            filename=args.filename,
-            seed=args.seed)
+    seq_dic = get_seq(treepath=args.treepath,
+                      fitness_path=args.fitness_path,
+                      R=args.R,
+                      seed=args.seed)
+
+    write_ali(seq_dic, args.filename)

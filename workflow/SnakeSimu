@@ -48,6 +48,17 @@ rule all:
         expand("processed/{CDS}/distance.tsv", CDS=CDS_list),
         expand("processed/{CDS}/{clade}.Whole.{model}.ci0.025.tsv", CDS=CDS_list, model=["omega", "omega_0"], clade=[config['clade']]),
 
+rule simulations:
+    input:
+        script = "workflow/scripts/simulations.py",
+        tree = "data/omm_RooTree.v10b_116/{CDS}_NT.rootree",
+        siteprofiles = "processed/{CDS}/{clade}.Whole.omega_0.siteprofiles",
+        nucmatrix = "data/Experiments/{CDS}/sitemutsel_1.run.nucmatrix.tsv"
+    output:
+        "processed/{CDS}/{clade}.Whole.simulation.phy"
+    shell:
+        "python3 {input.script} --tree {input.tree} --siteprofiles {input.siteprofiles} --R {input.nucmatrix} --outfile {output}"
+
 rule subset:
     input:
         script = "workflow/scripts/subset.py",
@@ -59,17 +70,6 @@ rule subset:
         expand("processed/{{CDS}}/{{clade}}.{subset}.rootree", subset=["Include", "Exclude", "Whole"])
     shell:
         "python3 {input.script} --fasta {input.fasta} --tree {input.tree} --subset {input.species_list} --outdir {folder}/processed/{wildcards.CDS}/{wildcards.clade}"
-
-rule simulations:
-    input:
-        script = "workflow/scripts/simulations.py",
-        tree = "data/omm_RooTree.v10b_116/{CDS}_NT.rootree",
-        siteprofiles = "processed/{CDS}/{clade}.Whole.omega_0.siteprofiles",
-        nucmatrix = "data/Experiments/{CDS}/sitemutsel_1.run.nucmatrix.tsv"
-    output:
-        "processed/{CDS}/{clade}.Whole.simulations.fasta"
-    shell:
-        "python3 {input.script} --tree {input.tree} --siteprofiles {input.siteprofiles} --R {input.nucmatrix} --outfile {output}"
 
 rule run_mutsel:
     input:
