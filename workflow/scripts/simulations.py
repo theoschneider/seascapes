@@ -3,7 +3,7 @@ import pandas as pd
 from collections import defaultdict
 from ete3 import Tree
 import argparse
-from libraries import write_ali
+from libraries import write_fasta
 
 
 # Define the codon table
@@ -222,4 +222,4 @@ if __name__ == "__main__":
                       R=args.R,
                       seed=args.seed)
 
-    write_ali(seq_dic, args.filename)
+    write_fasta(seq_dic, args.filename)
