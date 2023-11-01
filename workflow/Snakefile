@@ -51,7 +51,8 @@ rule all:
     input:
         expand("processed/{CDS}/distance.tsv", CDS=CDS_list),
         expand("processed/{CDS}/{clade}.Whole.{model}.ci0.025.tsv", CDS=CDS_list, model=["omega", "omega_0"], clade=[config['clade']]),
-        expand("processed/{CDS}/{clade}.Whole.{model}.siteprofiles", CDS=CDS_list, model=["omega", "omega_0"], clade=[config['clade']])
+        expand("processed/{CDS}/{clade}.Whole.{model}.siteprofiles", CDS=CDS_list, model=["omega", "omega_0"], clade=[config['clade']]),
+        expand("processed/{CDS}/{clade}.Whole.mask.tsv", CDS=CDS_list, clade=[config['clade']])
 
 rule subset:
     input:
@@ -147,8 +148,8 @@ rule distance:
 
 rule mask:
     input:
-
+        expand("processed/{{CDS}}/{clade}.Whole.phy", clade=[config['clade']])
     output:
-
+        "processed/{CDS}/{clade}.Whole.mask.tsv"
     shell:
-        "python3 workflow/scripts/mask.py --path {input[0]}"
+        "python3 workflow/scripts/mask.py --alipath {input} --outpath {output}"

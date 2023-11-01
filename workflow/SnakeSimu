@@ -46,7 +46,9 @@ localrules: all,subset
 rule all:
     input:
         expand("processed/{CDS}/simulations.distance.tsv", CDS=CDS_list),
-        expand("processed/{CDS}/simulations.{clade}.Whole.{model}.ci0.025.tsv", CDS=CDS_list, model=["omega", "omega_0"], clade=[config['clade']])
+        expand("processed/{CDS}/simulations.{clade}.Whole.{model}.ci0.025.tsv", CDS=CDS_list, model=["omega", "omega_0"], clade=[config['clade']]),
+        expand("processed/{CDS}/simulations.{clade}.Whole.{model}.siteprofiles", CDS=CDS_list, model=["omega", "omega_0"], clade=[config['clade']]),
+        expand("processed/{CDS}/simulations.{clade}.Whole.mask.tsv", CDS=CDS_list, clade=[config['clade']])
 
 rule simulations:
     input:
@@ -140,6 +142,7 @@ rule read_omega:
         "if test -f {folder}/processed/{wildcards.CDS}/simulations.{wildcards.clade}.Whole.{wildcards.model}.chain.gz; \
         then gunzip -f {folder}/processed/{wildcards.CDS}/simulations.{wildcards.clade}.Whole.{wildcards.model}.chain.gz; fi; \
         {input.bin} --every 1 -u {params.until} --burnin {params.burnin} --confidence_interval 0.025 --{wildcards.model} {folder}/processed/{wildcards.CDS}/simulations.{wildcards.clade}.Whole.{wildcards.model} ; \
+        {input.bin} --every 1 -u {params.until} --burnin {params.burnin} --ss {folder}/processed/{wildcards.CDS}/simulations.{wildcards.clade}.Whole.{wildcards.model} ; \
         gzip -f {folder}/processed/{wildcards.CDS}/simulations.{wildcards.clade}.Whole.{wildcards.model}.chain"
 
 rule distance:
@@ -149,3 +152,11 @@ rule distance:
         "processed/{CDS}/simulations.distance.tsv"
     shell:
         "python3 workflow/scripts/simple_distance.py --path1 {input[0]} --path2 {input[1]} --outpath {output}"
+
+rule mask:
+    input:
+        expand("processed/{{CDS}}/{clade}.Whole.phy", clade=[config['clade']])
+    output:
+        "processed/{CDS}/simulations.{clade}.Whole.mask.tsv"
+    shell:
+        "python3 workflow/scripts/mask.py --alipath {input} --outpath {output}"
