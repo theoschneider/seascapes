@@ -29,9 +29,12 @@ def main(ali_path: str, out_path: str) -> None:
 
     # write in a file, for every position, the frequency of the minor amino-acid
     with open(out_path, "w") as f:
-        f.write("site\tminor_aa_freq\n")
-        l = int(len(list(ali_dic.values())[0]) / 3)
+        f.write("site\tmajor_aa_freq\n")
+        l = len(list(ali_dic.values())[0].rstrip()) / 3
 
+        assert l.is_integer(), "Alignment length is not a multiple of 3"
+
+        l = int(l)
         for pos in range(l):
             n_species = 0
             freq = defaultdict(lambda: 0)
