@@ -144,3 +144,11 @@ rule distance:
         "processed/{CDS}/distance.tsv"
     shell:
         "python3 workflow/scripts/simple_distance.py --path1 {input[0]} --path2 {input[1]} --outpath {output}"
+
+rule mask:
+    input:
+
+    output:
+
+    shell:
+        "python3 workflow/scripts/mask.py --path {input[0]}"
