@@ -41,7 +41,7 @@ points = config['points']
 burn_in = config['burn_in']
 
 
-localrules: all,subset
+localrules: all,subset,distance,mask
 
 rule all:
     input:
