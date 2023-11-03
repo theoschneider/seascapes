@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from libraries import linearfit
 import numpy as np
 
+plt.rcParams['text.usetex'] = True
+
 # Set the source directory
 SOURCE_DIR = "/Users/theo/THÉO/seascapes"
 
@@ -34,6 +36,7 @@ for folder_name in all_genes:
     if not (os.path.exists(os.path.join(folder_path, "distance.tsv"))
     and os.path.exists(os.path.join(folder_path, CLADE + ".Whole.omega.ci0.025.tsv"))
     and os.path.exists(os.path.join(folder_path, CLADE + ".Whole.omega_0.ci0.025.tsv"))):
+        print(f"Skipping folder: {folder_path}")
         continue
 
     # For every folder
@@ -69,7 +72,7 @@ for folder_name in all_genes:
 for bin in range(n_bins):
 
     lower = min(df["omega0"] + bin / n_bins * (max(df["omega0"]) - min(df["omega0"])))
-    upper = min(df["omega0"] + (bin + 1) / n_bins * (max(df["omega0"]) - min(df["omega0"])))
+    upper = min(df["omega0"] + (bin+1) / n_bins * (max(df["omega0"]) - min(df["omega0"])))
 
     # Filter the df
     df_bin = df[(df["omega0"] > lower) & (df["omega0"] <= upper)]
@@ -80,11 +83,10 @@ for bin in range(n_bins):
     plt.scatter(df_bin["omegaA"], df_bin["distance"], s=2)
     plt.fill_between(x=np.linspace(min(df_bin["omegaA"]), max(df_bin["omegaA"]), 100), y1=lower_ci, y2=upper_ci, color=fill_reg, edgecolor=None)
     plt.plot(np.linspace(min(df_bin["omegaA"]), max(df_bin["omegaA"]), 100), yfit, linewidth=2, color=lin_reg)
-    plt.xlabel("Omega")
+    plt.xlabel("$\omega_A$")
     plt.ylabel("Distance")
-    plt.title("Distance as a function of omega for bin " + str(bin))
-    plt.xscale("log")
+    plt.title(f"Distance as a function of $\omega_A$ for bin {bin+1}: {lower:.2f} $< \omega_0 \le$ {upper:.2f}")
     plt.yscale("log")
     plt.tight_layout()
-    plt.savefig(SOURCE_DIR + "/results/distance-vs-omega_bin-" + str(bin+1) + ".pdf")
+    plt.savefig(f"{SOURCE_DIR}/results/distance-vs-omegaA_bin-{bin+1}.pdf")
 
