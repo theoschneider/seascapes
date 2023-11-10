@@ -66,7 +66,7 @@ rule subset:
         expand("processed/{{CDS}}/{{clade}}.{subset}.phy", subset=["Include", "Exclude", "Whole"]),
         expand("processed/{{CDS}}/{{clade}}.{subset}.rootree", subset=["Include", "Exclude", "Whole"])
     shell:
-        "{path_python} {input.script} --fasta {input.fasta} --tree {input.tree} --subset {input.species_list} --outdir {folder}/processed/{wildcards.CDS}/{wildcards.clade}"
+        "{python_path} {input.script} --fasta {input.fasta} --tree {input.tree} --subset {input.species_list} --outdir {folder}/processed/{wildcards.CDS}/{wildcards.clade}"
 
 rule run_mutsel:
     input:
@@ -146,7 +146,7 @@ rule distance:
     output:
         "processed/{CDS}/distance.tsv"
     shell:
-        "{path_python} workflow/scripts/simple_distance.py --path1 {input[0]} --path2 {input[1]} --outpath {output}"
+        "{python_path} workflow/scripts/simple_distance.py --path1 {input[0]} --path2 {input[1]} --outpath {output}"
 
 rule mask:
     input:
@@ -154,4 +154,4 @@ rule mask:
     output:
         "processed/{CDS}/{clade}.Whole.mask.tsv"
     shell:
-        "{path_python} workflow/scripts/mask.py --alipath {input} --outpath {output}"
+        "{python_path} workflow/scripts/mask.py --alipath {input} --outpath {output}"
