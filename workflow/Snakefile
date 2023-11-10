@@ -74,7 +74,7 @@ rule run_mutsel:
     output:
         "processed/{CDS}/{clade}.{subset}.run"
     params:
-        time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        time="12:00:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"]
     shell:
         "{input.bin} --ncat 30 -a {input.phy} -t {input.tree} -u {params.until} {folder}/processed/{wildcards.CDS}/{wildcards.clade}.{wildcards.subset}"
@@ -84,7 +84,7 @@ rule read_mutsel:
         bin = bayescode_path['readmutselomega'],
         chain = "processed/{CDS}/{clade}.{subset}.run"
     params:
-        time="0-10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        time="10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"],
         burnin=config["burn_in"]
     output:
@@ -103,7 +103,7 @@ rule run_omega_0:
     output:
         "processed/{CDS}/{clade}.Whole.omega_0.run"
     params:
-        time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        time="12:00:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"]
     shell:
         "{input.bin} --ncat 30 -a {input.phy} -t {input.tree} -u {params.until} {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.omega_0"
@@ -116,7 +116,7 @@ rule run_omega:
     output:
         "processed/{CDS}/{clade}.Whole.omega.run"
     params:
-        time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        time="12:00:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"]
     shell:
         "{input.bin} --freeomega --omegancat 30 --flatfitness -a {input.phy} -t {input.tree} -u {params.until} {folder}/processed/{wildcards.CDS}/{wildcards.clade}.Whole.omega"
@@ -126,7 +126,7 @@ rule read_omega:
         bin = bayescode_path['readmutselomega'],
         chain = "processed/{CDS}/{clade}.Whole.{model}.run"
     params:
-        time="0-10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        time="10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"],
         burnin=config["burn_in"]
     output:
