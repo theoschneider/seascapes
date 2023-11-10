@@ -11,6 +11,8 @@ xml_folder = "data/omm_markers"
 
 bayescode_path = {}
 
+python_path = os.popen('which python3').read().strip()
+
 for executable in ["mutselomega", "readmutselomega"]:
     exec_path = os.path.join(folder, f'utils/BayesCode/bin/{executable}')
     if not os.path.exists(exec_path):
@@ -64,7 +66,7 @@ rule subset:
         expand("processed/{{CDS}}/{{clade}}.{subset}.phy", subset=["Include", "Exclude", "Whole"]),
         expand("processed/{{CDS}}/{{clade}}.{subset}.rootree", subset=["Include", "Exclude", "Whole"])
     shell:
-        "python3 {input.script} --fasta {input.fasta} --tree {input.tree} --subset {input.species_list} --outdir {folder}/processed/{wildcards.CDS}/{wildcards.clade}"
+        "{path_python} {input.script} --fasta {input.fasta} --tree {input.tree} --subset {input.species_list} --outdir {folder}/processed/{wildcards.CDS}/{wildcards.clade}"
 
 rule run_mutsel:
     input:
@@ -144,7 +146,7 @@ rule distance:
     output:
         "processed/{CDS}/distance.tsv"
     shell:
-        "python3 workflow/scripts/simple_distance.py --path1 {input[0]} --path2 {input[1]} --outpath {output}"
+        "{path_python} workflow/scripts/simple_distance.py --path1 {input[0]} --path2 {input[1]} --outpath {output}"
 
 rule mask:
     input:
@@ -152,4 +154,4 @@ rule mask:
     output:
         "processed/{CDS}/{clade}.Whole.mask.tsv"
     shell:
-        "python3 workflow/scripts/mask.py --alipath {input} --outpath {output}"
+        "{path_python} workflow/scripts/mask.py --alipath {input} --outpath {output}"

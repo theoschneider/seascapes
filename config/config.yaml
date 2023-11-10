@@ -3,4 +3,4 @@ CDS_start: 0
 CDS_end: 256
 burn_in: 1000
 points: 2000
-clade: "Euarchontoglires"
+clade: Euarchontoglires
