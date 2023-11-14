@@ -6,6 +6,7 @@
 
 *~
 /processed/
+/processed_sim/
 /utils/
 /data/
 __pycache__
