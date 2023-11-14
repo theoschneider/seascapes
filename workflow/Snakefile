@@ -86,7 +86,7 @@ rule read_mutsel:
         bin = bayescode_path['readmutselomega'],
         chain = "processed/{CDS}/{clade}.{subset}.run"
     params:
-        time="10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        time="30:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"],
         burnin=config["burn_in"]
     output:
@@ -128,7 +128,7 @@ rule read_omega:
         bin = bayescode_path['readmutselomega'],
         chain = "processed/{CDS}/{clade}.Whole.{model}.run"
     params:
-        time="10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        time="30:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"],
         burnin=config["burn_in"]
     output:
