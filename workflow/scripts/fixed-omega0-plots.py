@@ -67,14 +67,24 @@ for folder_name in all_genes:
             {"distance": distance[i], "omega0": omega0[i], "omegaA": omega[i] - omega0[i]},
             ignore_index=True)
 
+print("Done with concatenating all the dataframes")
 
-# Plot distance vs omega and save it (for every bin)
+# Sort the df and calculate the step
+df.sort_values(by=["omega0"], inplace=True)
+step = len(df) // n_bins
+
+# Iterate over the number of bins
 for bin in range(n_bins):
 
-    lower = min(df["omega0"] + bin / n_bins * (max(df["omega0"]) - min(df["omega0"])))
-    upper = min(df["omega0"] + (bin+1) / n_bins * (max(df["omega0"]) - min(df["omega0"])))
+    lower = df.iloc[bin*step, 1]
 
-    # Filter the df
+    if bin == n_bins - 1:
+        # If it is the last bin, take the last value of omega0 as upper bound
+        upper = max(df["omega0"])
+    else:
+        # Take the last value of the bin
+        upper = df.iloc[(bin+1)*step, 1]
+
     df_bin = df[(df["omega0"] > lower) & (df["omega0"] <= upper)]
 
     # Plot distance vs omega and save it
