@@ -35,7 +35,8 @@ for folder_name in all_genes:
     # Check if the folder contains distance.tsv, omega, omega0
     if not (os.path.exists(os.path.join(folder_path, "distance.tsv"))
     and os.path.exists(os.path.join(folder_path, CLADE + ".Whole.omega.ci0.025.tsv"))
-    and os.path.exists(os.path.join(folder_path, CLADE + ".Whole.omega_0.ci0.025.tsv"))):
+    and os.path.exists(os.path.join(folder_path, CLADE + ".Whole.omega_0.ci0.025.tsv"))
+    and os.path.exists(os.path.join(folder_path, CLADE + ".Whole.mask.tsv"))):
         print(f"Skipping folder: {folder_path}")
         continue
 
@@ -43,6 +44,9 @@ for folder_name in all_genes:
     print(f"Processing folder: {folder_path}")
 
     name = folder_name.split("_")[1]
+
+    # Open the mask
+    mask = pd.read_csv(os.path.join(folder_path, CLADE + ".Whole.mask.tsv"), sep="\t", header=0, index_col=None)
 
     # Open distance.tsv
     distance = pd.read_csv(os.path.join(folder_path, "distance.tsv"), sep="\t", header=0, index_col=None)
@@ -57,6 +61,11 @@ for folder_name in all_genes:
     distance = distance.iloc[:, 1].tolist()
     omega = omega.iloc[1:, 1].tolist()
     omega0 = omega0.iloc[1:, 1].tolist()
+
+    # Filter the distance and omega lists
+    distance = [distance[i] for i in range(len(distance)) if mask.iloc[i, 1] < 0.95]
+    omega = [omega[i] for i in range(len(omega)) if mask.iloc[i, 1] < 0.95]
+    omega0 = [omega0[i] for i in range(len(omega0)) if mask.iloc[i, 1] < 0.95]
 
     # Assert that the length of omega and omega0 are the same
     assert len(omega) == len(omega0) == len(distance), "Length of omega, omega0 and distance are not the same"
