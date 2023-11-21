@@ -43,6 +43,10 @@ for folder_name in all_genes:
     # For every folder
     print(f"Processing folder: {folder_path}")
 
+    # Check if the result folder exists, if not create it
+    if not os.path.exists(os.path.join(SOURCE_DIR, "results", folder_name)):
+        os.makedirs(os.path.join(SOURCE_DIR, "results", folder_name))
+
     name = folder_name.split("_")[1]
 
     # Open the mask
