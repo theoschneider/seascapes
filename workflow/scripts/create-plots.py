@@ -78,8 +78,8 @@ for folder_name in genes_list:
 
     # Plot the distance and omega on the same plot
     fig, ax1 = plt.subplots()
-    col1 = "#2674D9"
-    col2 = "#D92674"
+    col1 = "#1AFF1A"
+    col2 = "#4B0092"
     width = len(distance) / 20
     # fig.set_size_inches(width, 7)
     ax1.set_xlabel("Position")
