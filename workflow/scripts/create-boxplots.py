@@ -25,6 +25,7 @@ all_sim_dist = []
 # Initialize empty lists for the distances per gene
 emp_dist_pergene = []
 sim_dist_pergene = []
+omega_pergene = []
 
 print("Processing " + str(len(folders)) + " folders")
 # Iterate for every folder
@@ -32,8 +33,7 @@ for folder_name in folders:
 
     # Check if both distance files exist and also the mask
     if not (os.path.exists(os.path.join(SOURCE_DIR, "processed", folder_name, "distance.tsv"))
-    and os.path.exists(os.path.join(SOURCE_DIR, "processed_sim", folder_name, "distance.tsv"))
-    and os.path.exists(os.path.join(SOURCE_DIR, "processed", folder_name, CLADE + ".Whole.mask.tsv"))):
+    and os.path.exists(os.path.join(SOURCE_DIR, "processed_sim", folder_name, "distance.tsv"))):
         print(f"Skipping folder: {folder_name}")
         continue
 
@@ -46,20 +46,19 @@ for folder_name in folders:
     if not os.path.exists(os.path.join(SOURCE_DIR, "results", folder_name)):
         os.makedirs(os.path.join(SOURCE_DIR, "results", folder_name))
 
-    # Open the mask
-    mask = pd.read_csv(os.path.join(empirical_path, CLADE + ".Whole.mask.tsv"), sep="\t", header=0, index_col=None)
-    mask = mask.iloc[:, 1]
-
     # Open empirical distance
     distance_df = pd.read_csv(os.path.join(empirical_path, "distance.tsv"), sep="\t", header=0, index_col=None)
     # Filter distance, keep 1 col
-    filt_dist = distance_df.iloc[:, 1][mask < 0.95]
+    filt_dist = distance_df.iloc[:, 1]
 
     # Open simulated distance
     sim_distance_df = pd.read_csv(os.path.join(simulated_path, "distance.tsv"), sep="\t", header=0, index_col=None)
     # Filter distance, keep 1 col
-    sim_filt_dist = sim_distance_df.iloc[:, 1][mask < 0.95]
+    sim_filt_dist = sim_distance_df.iloc[:, 1]
 
+    # Open omega
+    omega_df = pd.read_csv(os.path.join(empirical_path, CLADE + ".Whole.omega.ci0.025.tsv"), sep="\t", header=0, index_col=None)
+    omega_pergene.append(omega_df.iloc[0, 1])
 
     # Plot the 2 distances in a boxplot
     fig, ax = plt.subplots(figsize=(10, 10))
@@ -95,4 +94,28 @@ ax.boxplot([emp_dist_pergene, sim_dist_pergene], labels=["Empirical", "Simulated
 ax.set_ylabel("Distance")
 ax.set_title("Distance between two subsets, for all genes (n = 256)")
 plt.savefig(os.path.join(SOURCE_DIR, "results", "pergene_emp-vs-sim.pdf"), bbox_inches='tight')
+plt.close()
+
+
+# Plot the distances per gene in a scatterplot
+fig, ax = plt.subplots(figsize=(10, 10))
+ax.scatter(all_emp_dist, all_sim_dist)
+x = np.linspace(min(all_sim_dist), max(all_sim_dist), 100)
+ax.plot(x, x, color="red")
+ax.set_xlabel("Empirical distance")
+ax.set_ylabel("Simulated distance")
+ax.set_title("Distance between two subsets, for all positions, for all genes (n = 256)")
+plt.savefig(os.path.join(SOURCE_DIR, "results", "allgenes_emp-vs-sim_scatter.pdf"), bbox_inches='tight')
+plt.close()
+
+# Plot the distances per gene in a scatterplot, with omega as color
+fig, ax = plt.subplots(figsize=(12, 10))
+ax.scatter(emp_dist_pergene, sim_dist_pergene, c=omega_pergene, cmap="viridis")
+fig.colorbar(ax.collections[0], ax=ax)
+x = np.linspace(min(emp_dist_pergene), max(emp_dist_pergene), 100)
+ax.plot(x, x, color="red")
+ax.set_xlabel("Empirical distance")
+ax.set_ylabel("Simulated distance")
+ax.set_title("Distance between two subsets, for all genes (n = 256)")
+plt.savefig(os.path.join(SOURCE_DIR, "results", "pergene_emp-vs-sim_scatter.pdf"), bbox_inches='tight')
 plt.close()
