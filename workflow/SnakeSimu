@@ -11,6 +11,8 @@ xml_folder = "data/omm_markers"
 
 bayescode_path = {}
 
+python_path = os.popen('which python3').read().strip()
+
 for executable in ["mutselomega", "readmutselomega"]:
     exec_path = os.path.join(folder, f'utils/BayesCode/bin/{executable}')
     if not os.path.exists(exec_path):
@@ -54,7 +56,7 @@ points = config['points']
 burn_in = config['burn_in']
 
 
-localrules: all,subset,distance,mask
+localrules: all,simulations,subset,distance,mask
 
 rule all:
     input:
@@ -72,7 +74,7 @@ rule simulations:
     output:
         "processed/{CDS}/simulations.{clade}.Whole.fasta"
     shell:
-        "python3 {input.script} --tree {input.tree} --siteprofiles {input.siteprofiles} --R {input.nucmatrix} --outfile {output}"
+        "{python_path} {input.script} --tree {input.tree} --siteprofiles {input.siteprofiles} --R {input.nucmatrix} --outfile {output}"
 
 rule subset:
     input:
@@ -84,7 +86,7 @@ rule subset:
         expand("processed/{{CDS}}/simulations.{{clade}}.{subset}.phy", subset=["Include", "Exclude", "Whole"]),
         expand("processed/{{CDS}}/simulations.{{clade}}.{subset}.rootree", subset=["Include", "Exclude", "Whole"])
     shell:
-        "python3 {input.script} --fasta {input.fasta} --tree {input.tree} --subset {input.species_list} --outdir {folder}/processed/{wildcards.CDS}/simulations.{wildcards.clade}"
+        "{python_path} {input.script} --fasta {input.fasta} --tree {input.tree} --subset {input.species_list} --outdir {folder}/processed/{wildcards.CDS}/simulations.{wildcards.clade}"
 
 rule run_mutsel:
     input:
@@ -94,7 +96,7 @@ rule run_mutsel:
     output:
         "processed/{CDS}/simulations.{clade}.{subset}.run"
     params:
-        time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        time="12:00:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"]
     shell:
         "{input.bin} --ncat 30 -a {input.phy} -t {input.tree} -u {params.until} {folder}/processed/{wildcards.CDS}/simulations.{wildcards.clade}.{wildcards.subset}"
@@ -104,7 +106,7 @@ rule read_mutsel:
         bin = bayescode_path['readmutselomega'],
         chain = "processed/{CDS}/simulations.{clade}.{subset}.run"
     params:
-        time="0-10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        time="30:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"],
         burnin=config["burn_in"]
     output:
@@ -123,7 +125,7 @@ rule run_omega_0:
     output:
         "processed/{CDS}/simulations.{clade}.Whole.omega_0.run"
     params:
-        time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        time="12:00:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"]
     shell:
         "{input.bin} --ncat 30 -a {input.phy} -t {input.tree} -u {params.until} {folder}/processed/{wildcards.CDS}/simulations.{wildcards.clade}.Whole.omega_0"
@@ -136,7 +138,7 @@ rule run_omega:
     output:
         "processed/{CDS}/simulations.{clade}.Whole.omega.run"
     params:
-        time="3-23:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        time="12:00:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"]
     shell:
         "{input.bin} --freeomega --omegancat 30 --flatfitness -a {input.phy} -t {input.tree} -u {params.until} {folder}/processed/{wildcards.CDS}/simulations.{wildcards.clade}.Whole.omega"
@@ -146,7 +148,7 @@ rule read_omega:
         bin = bayescode_path['readmutselomega'],
         chain = "processed/{CDS}/simulations.{clade}.Whole.{model}.run"
     params:
-        time="0-10:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
+        time="30:00",mem=1000,threads=1,name=lambda wildcards: wildcards.CDS,
         until=config["points"],
         burnin=config["burn_in"]
     output:
@@ -164,7 +166,7 @@ rule distance:
     output:
         "processed/{CDS}/simulations.distance.tsv"
     shell:
-        "python3 workflow/scripts/simple_distance.py --path1 {input[0]} --path2 {input[1]} --outpath {output}"
+        "{python_path} workflow/scripts/simple_distance.py --path1 {input[0]} --path2 {input[1]} --outpath {output}"
 
 rule mask:
     input:
@@ -172,4 +174,4 @@ rule mask:
     output:
         "processed/{CDS}/simulations.{clade}.Whole.mask.tsv"
     shell:
-        "python3 workflow/scripts/mask.py --alipath {input} --outpath {output}"
+        "{python_path} workflow/scripts/mask.py --alipath {input} --outpath {output}"
