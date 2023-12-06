@@ -110,12 +110,27 @@ plt.close()
 
 # Plot the distances per gene in a scatterplot, with omega as color
 fig, ax = plt.subplots(figsize=(12, 10))
-ax.scatter(emp_dist_pergene, sim_dist_pergene, c=omega_pergene, cmap="viridis")
-fig.colorbar(ax.collections[0], ax=ax)
+scatter = ax.scatter(emp_dist_pergene, sim_dist_pergene, c=omega_pergene, cmap="viridis")
+fig.colorbar(scatter, ax=ax)
 x = np.linspace(min(emp_dist_pergene), max(emp_dist_pergene), 100)
 ax.plot(x, x, color="red")
 ax.set_xlabel("Empirical distance")
 ax.set_ylabel("Simulated distance")
 ax.set_title("Distance between two subsets, for all genes (n = 256)")
+# Calculate the distance of each point from the x=y line
+distances = np.abs(np.array(emp_dist_pergene) - np.array(sim_dist_pergene))
+# Set the threshold for the distance
+threshold = 0.007  # adjust this value as needed
+# Iterate over the points
+for i, (x_coord, y_coord) in enumerate(zip(emp_dist_pergene, sim_dist_pergene)):
+    # If the point is "far" from the line
+    if distances[i] > threshold:
+        # Add a label to the point
+        ax.annotate(folders[i].split("_")[1],
+                    (x_coord, y_coord),
+                    textcoords="offset points",
+                    xytext=(-100, 10),
+                    ha='left', # text horizontal alignment
+                    arrowprops=dict(arrowstyle="-"))
 plt.savefig(os.path.join(SOURCE_DIR, "results", "pergene_emp-vs-sim_scatter.pdf"), bbox_inches='tight')
 plt.close()
