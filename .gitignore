@@ -9,9 +9,12 @@
 /processed_sim/
 /utils/
 /data/
+/slurm/
 __pycache__
 .snakemake
 .idea/
+*.out
+*.err
 *.svg
 *.ai
 *.indd
