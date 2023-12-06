@@ -27,12 +27,25 @@ for executable in ["mutselomega", "readmutselomega"]:
 processed_folders = [dir.name for dir in os.scandir(os.path.join(folder, "processed")) if dir.name != ".DS_Store"]
 processed_folders.sort()
 
+# Take the genes that are adaptive
+genes_summary = pd.read_csv(f"data/GeneTable.tsv", sep="\t", header=0, index_col=None)
+genes_summary = genes_summary[genes_summary["category"] == "adaptive"]
+
+# Take the intersection of adaptive and processed, and take more processed if needed
+processed_and_adaptive = list(set(processed_folders) & set(genes_summary["ENSG"]))
+n_adaptive = len(processed_and_adaptive)
+processed_not_adaptive = list(set(processed_folders) - set(genes_summary["ENSG"]))
+
+folders_list = processed_and_adaptive
+folders_list.sort()
+folders_list.extend(processed_not_adaptive)
+
 if config["all_genes"]:
     CDS_list = processed_folders
 else:
-    CDS_list = processed_folders[config['CDS_start']:config['CDS_end']]
+    CDS_list = folders_list[config['CDS_start']:config['CDS_end']]
 
-print(f"Using {len(CDS_list)} genes.")
+print(f"Using {len(CDS_list)} genes, including {n_adaptive} adaptive genes.")
 
 models = {"sitemutsel": "--ncat 30",
           "siteomega": "--freeomega --omegancat 30 --flatfitness"}
