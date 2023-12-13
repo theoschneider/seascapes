@@ -27,6 +27,9 @@ emp_dist_pergene = []
 sim_dist_pergene = []
 omega_pergene = []
 
+# Initialize empty list for the gene names
+gene_names = []
+
 print("Processing " + str(len(folders)) + " folders")
 # Iterate for every folder
 for folder_name in folders:
@@ -38,6 +41,7 @@ for folder_name in folders:
         continue
 
     print(f"Processing folder: {folder_name}")
+    gene_names.append(folder_name.split("_")[1])
 
     empirical_path = os.path.join(SOURCE_DIR, "processed", folder_name)
     simulated_path = os.path.join(SOURCE_DIR, "processed_sim", folder_name)
@@ -80,6 +84,8 @@ for folder_name in folders:
     emp_dist_pergene.append(emp_mean)
     sim_dist_pergene.append(sim_mean)
 
+print(f"Number of genes: {len(gene_names)}")
+
 # Plot the 2 distances in a boxplot
 fig, ax = plt.subplots(figsize=(10, 10))
 ax.boxplot([all_emp_dist, all_sim_dist], labels=["Empirical", "Simulated"])
@@ -112,6 +118,9 @@ plt.close()
 fig, ax = plt.subplots(figsize=(12, 10))
 scatter = ax.scatter(emp_dist_pergene, sim_dist_pergene, c=omega_pergene, cmap="viridis")
 fig.colorbar(scatter, ax=ax)
+cb = ax.collections[0].colorbar
+# cb.set_label("omega")
+cb.ax.set_title("omega")
 x = np.linspace(min(emp_dist_pergene), max(emp_dist_pergene), 100)
 ax.plot(x, x, color="red")
 ax.set_xlabel("Empirical distance")
@@ -119,14 +128,14 @@ ax.set_ylabel("Simulated distance")
 ax.set_title("Distance between two subsets, for all genes (n = 256)")
 # Calculate the distance of each point from the x=y line
 distances = np.abs(np.array(emp_dist_pergene) - np.array(sim_dist_pergene))
-# Set the threshold for the distance
-threshold = 0.007  # adjust this value as needed
+# Set the threshold for the distance (has to be adjusted)
+threshold = 0.007
 # Iterate over the points
 for i, (x_coord, y_coord) in enumerate(zip(emp_dist_pergene, sim_dist_pergene)):
     # If the point is "far" from the line
     if distances[i] > threshold:
         # Add a label to the point
-        ax.annotate(folders[i].split("_")[1],
+        ax.annotate(gene_names[i],
                     (x_coord, y_coord),
                     textcoords="offset points",
                     xytext=(-100, 10),
