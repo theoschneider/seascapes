@@ -112,4 +112,5 @@ for bin in range(n_bins):
     plt.yscale("log")
     plt.tight_layout()
     plt.savefig(f"{SOURCE_DIR}/results/distance-vs-omegaA_bin-{bin+1}.pdf")
+    plt.close()
 
