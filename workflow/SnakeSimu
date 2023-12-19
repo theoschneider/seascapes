@@ -92,7 +92,7 @@ rule run_mutsel:
     input:
         bin = bayescode_path['mutselomega'],
         phy = "processed_sim/{CDS}/simulations.{clade}.{subset}.phy",
-        tree = "processed_sim/{CDS}/{clade}.{subset}.rootree"
+        tree = "processed_sim/{CDS}/simulations.{clade}.{subset}.rootree"
     output:
         "processed_sim/{CDS}/simulations.{clade}.{subset}.run"
     params:
