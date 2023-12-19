@@ -170,7 +170,7 @@ rule distance:
 
 rule mask:
     input:
-        expand("processed_sim/{{CDS}}/{clade}.Whole.phy", clade=[config['clade']])
+        expand("processed_sim/{{CDS}}/simulations.{clade}.Whole.phy", clade=[config['clade']])
     output:
         "processed_sim/{CDS}/simulations.{clade}.Whole.mask.tsv"
     shell:
