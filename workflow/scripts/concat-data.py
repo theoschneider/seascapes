@@ -19,7 +19,7 @@ folders = emp_folders & sim_folders
 count = 0
 
 # Initialize dataframe
-df = pd.DataFrame(columns=["gene", "emp_distance", "emp_omega", "emp_omega0", "sim_distance", "sim_omega", "sim_omega0"])
+df = pd.DataFrame(columns=["gene", "emp_distance", "emp_omega", "emp_omega0", "emp_omegaA", "sim_distance", "sim_omega", "sim_omega0", "sim_omegaA"])
 
 # Iterate over the contents of folders and process them
 for folder in folders:
@@ -60,14 +60,18 @@ for folder in folders:
     sim_omega0 = pd.read_csv(os.path.join(sim_path, "Euarchontoglires.Whole.omega_0.ci0.025.tsv"), sep="\t", header=0, index_col=0)
     sim_omega0 = sim_omega0.iloc[1:, 1].tolist()
 
+    # Calculate omegaA
+    emp_omegaA = [emp_omega[i] - emp_omega0[i] for i in range(len(emp_omega))]
+    sim_omegaA = [sim_omega[i] - sim_omega0[i] for i in range(len(sim_omega))]
+
     # Check that all lists are the same length
-    assert len(emp_distance) == len(emp_omega) == len(emp_omega0) == len(sim_distance) == len(sim_omega) == len(sim_omega0), "Files do not have the same length"
+    assert len(emp_distance) == len(emp_omega) == len(emp_omega0) == len(sim_distance) == len(sim_omega) == len(sim_omega0) == len(emp_omegaA) == len(sim_omegaA), "Files do not have the same length"
     n_row = len(emp_distance)
 
     # Create a list of dictionaries, each representing a row
-    rows = [{"gene": gene, "emp_distance": emp_distance[i], "emp_omega": emp_omega[i],
-             "emp_omega0": emp_omega0[i], "sim_distance": sim_distance[i], "sim_omega": sim_omega[i],
-             "sim_omega0": sim_omega0[i]} for i in range(n_row)]
+    rows = [{"gene": gene, "emp_distance": emp_distance[i], "emp_omega": emp_omega[i], "emp_omega0": emp_omega0[i],
+             "emp_omegaA": emp_omegaA[i], "sim_distance": sim_distance[i], "sim_omega": sim_omega[i],
+             "sim_omega0": sim_omega0[i], "sim_omegaA": sim_omegaA[i]} for i in range(n_row)]
 
     # Create a new DataFrame for these rows
     new_rows = pd.DataFrame(rows)
@@ -77,7 +81,7 @@ for folder in folders:
 
 
 # Save the file
-df.to_csv(os.path.join(SOURCE_DIR, "results", "concat_data.tsv"), sep="\t", header=True, index=False)
+df.to_csv(os.path.join(SOURCE_DIR, "processed", "concat_data.tsv"), sep="\t", header=True, index=False)
 
 # Print the number of genes processed
-print(f"Processed {count} genes, saved in {os.path.join(SOURCE_DIR, 'results', 'concat_data.tsv')} ({df.shape[0]} rows)")
+print(f"Processed {count} genes, saved in {os.path.join(SOURCE_DIR, 'processed', 'concat_data.tsv')} ({df.shape[0]} rows)")
