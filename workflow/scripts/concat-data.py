@@ -80,8 +80,69 @@ for folder in folders:
     df = pd.concat([df, new_rows], ignore_index=True)
 
 
-# Save the file
+# Same for empirical data only
+# Initialize count
+emp_count = 0
+
+# Initialize dataframe
+emp_df = pd.DataFrame(columns=["gene", "distance", "omega", "omega0", "omegaA", "mask"])
+
+# Iterate over folders
+for folder in emp_folders:
+    # Get folder with processed data
+    emp_path = os.path.join(SOURCE_DIR, "processed", folder)
+
+    # Check if the necessary files exist in the folder
+    if not (os.path.exists(os.path.join(emp_path, "distance.tsv"))
+    and os.path.exists(os.path.join(emp_path, "Euarchontoglires.Whole.omega.ci0.025.tsv"))
+    and os.path.exists(os.path.join(emp_path, "Euarchontoglires.Whole.omega_0.ci0.025.tsv"))
+    and os.path.exists(os.path.join(emp_path, "Euarchontoglires.Whole.mask.tsv"))):
+        continue
+
+    # Increment count
+    emp_count += 1
+
+    # Get gene name
+    gene = folder.split("_")[1]
+
+    # Open distance.tsv
+    distance = pd.read_csv(os.path.join(emp_path, "distance.tsv"), sep="\t", header=0, index_col=None)
+    distance = distance.iloc[:, 1].tolist()
+
+    # Open omega
+    omega = pd.read_csv(os.path.join(emp_path, "Euarchontoglires.Whole.omega.ci0.025.tsv"), sep="\t", header=0, index_col=0)
+    omega = omega.iloc[1:, 1].tolist()
+
+    # Open omega0
+    omega0 = pd.read_csv(os.path.join(emp_path, "Euarchontoglires.Whole.omega_0.ci0.025.tsv"), sep="\t", header=0, index_col=0)
+    omega0 = omega0.iloc[1:, 1].tolist()
+
+    # Calculate omegaA
+    omegaA = [omega[i] - omega0[i] for i in range(len(omega))]
+
+    # Open mask
+    mask = pd.read_csv(os.path.join(emp_path, "Euarchontoglires.Whole.mask.tsv"), sep="\t", header=0, index_col=None)
+    mask = mask.iloc[:, 1].tolist()
+
+    # Check that all lists are the same length
+    assert len(distance) == len(omega) == len(omega0) == len(omegaA) == len(mask), "Files do not have the same length"
+    n_row = len(distance)
+
+    # Create a list of dictionaries, each representing a row
+    rows = [{"gene": gene, "distance": distance[i], "omega": omega[i], "omega0": omega0[i],
+             "omegaA": omegaA[i], "mask": mask[i]} for i in range(n_row)]
+
+    # Create a new DataFrame for these rows
+    new_rows = pd.DataFrame(rows)
+
+    # Use pd.concat to append the new rows to the existing DataFrame
+    emp_df = pd.concat([emp_df, new_rows], ignore_index=True)
+
+
+# Save the files
 df.to_csv(os.path.join(SOURCE_DIR, "processed", "concat_data.tsv"), sep="\t", header=True, index=False)
+emp_df.to_csv(os.path.join(SOURCE_DIR, "processed", "emp_data.tsv"), sep="\t", header=True, index=False)
 
 # Print the number of genes processed
-print(f"Processed {count} genes, saved in {os.path.join(SOURCE_DIR, 'processed', 'concat_data.tsv')} ({df.shape[0]} rows)")
+print(f"Emp+Sim: Processed {count} genes, saved in {os.path.join(SOURCE_DIR, 'processed', 'concat_data.tsv')} ({df.shape[0]} rows)")
+print(f"Emp only: Processed {emp_count} genes, saved in {os.path.join(SOURCE_DIR, 'processed', 'emp_data.tsv')} ({emp_df.shape[0]} rows)")
