@@ -21,12 +21,13 @@ type_col = ["Empirical"]*n_obs + ["Simulated"]*n_obs
 plot_df = pd.DataFrame({"distance": distance_col, "type": type_col})
 
 # Create violin plot
-fig, ax = plt.subplots(figsize=(8, 8))
+fig, ax = plt.subplots(dpi=130, figsize=(8, 8))
 sns.set_style("whitegrid")
 p = sns.violinplot(x="type", y="distance", data=plot_df, inner="quart", log_scale=True, ax=ax, color="#3B75AE")
-p.set_title("Distance distribution")
-p.set_xlabel("Type of data")
-p.set_ylabel("Distance (log-scaled)")
+p.set_xlabel("Type of data", fontsize=16)
+p.set_ylabel("Distance (log-scaled)", fontsize=16)
+p.tick_params(axis='both', which='major', labelsize=16)
+plt.tight_layout()
 plt.savefig(SOURCE_DIR + "/results/violin-plot.pdf")
+plt.show()
 plt.close()
-
