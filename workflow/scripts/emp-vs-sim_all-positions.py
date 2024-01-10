@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats
 
 # Set the source directory
 SOURCE_DIR = "/Users/theo/THÉO/seascapes"
@@ -27,3 +28,12 @@ plt.tight_layout()
 plt.savefig(SOURCE_DIR + "/results/allpositions_emp-vs-sim_scatter.pdf")
 plt.show()
 plt.close()
+
+# Calculate r2 and slope
+x = df["emp_distance"]
+y = df["sim_distance"]
+r2 = np.corrcoef(x, y)[0, 1]**2
+slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, y)
+print("r2:", r2)
+print("slope:", slope)
+print("p_value:", p_value)

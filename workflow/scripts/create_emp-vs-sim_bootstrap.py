@@ -53,9 +53,11 @@ scatter = ax.scatter(plot_df["emp_dist"], plot_df["sim_dist"], c=plot_df["emp_om
 cbar = fig.colorbar(scatter, ax=ax)
 cbar.ax.set_title("$\omega$", fontsize=16)
 cbar.ax.tick_params(labelsize=16)
-# add gene names if one of the error bars does not overlap with x=y line
+# add gene names if one of the error bars does not overlap with x=y line and count
+count = 0
 for i, row in plot_df.iterrows():
     if row["emp_dist_low"] > row["sim_dist"] or row["sim_dist_high"] < row["emp_dist"]:
+        count += 1
         # lower right corner
         ax.annotate(row["gene"],  # this is the text
                     (row["emp_dist"], row["sim_dist"]),  # this is the point to label
@@ -65,6 +67,7 @@ for i, row in plot_df.iterrows():
                     arrowprops=dict(arrowstyle="-"),
                     fontsize=12)
     elif row["emp_dist_high"] < row["sim_dist"] or row["sim_dist_low"] > row["emp_dist"]:
+        count += 1
         # upper left corner
         ax.annotate(row["gene"],  # this is the text
                     (row["emp_dist"], row["sim_dist"]),  # this is the point to label
@@ -80,3 +83,12 @@ plt.tight_layout()
 plt.savefig(os.path.join(SOURCE_DIR, "results", "pergene_emp-vs-sim_ci.pdf"), bbox_inches='tight')
 plt.show()
 plt.close()
+print("Total number of genes:", len(plot_df))
+print("Number of genes with non-overlapping error bars:", count)
+
+# Calculate r2 and slope
+r2 = np.corrcoef(plot_df["emp_dist"], plot_df["sim_dist"])[0, 1] ** 2
+slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(plot_df["emp_dist"], plot_df["sim_dist"])
+print("r2:", r2)
+print("slope:", slope)
+print("p_value:", p_value)
