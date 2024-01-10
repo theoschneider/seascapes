@@ -235,3 +235,12 @@ def set_size(w, h, ax=None):
     figw = float(w)/(r-l)
     figh = float(h)/(t-b)
     ax.figure.set_size_inches(figw, figh)
+
+
+def cohen_d(x, y):
+    nx = len(x)
+    ny = len(y)
+    dof = nx + ny - 2
+    d = (np.mean(x) - np.mean(y)) / np.sqrt(((nx - 1) * np.std(x, ddof=1) ** 2 + (ny - 1) * np.std(y, ddof=1) ** 2) / dof)
+    return d
+
